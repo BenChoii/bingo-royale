@@ -3,11 +3,55 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { generateBingoCard } from "./rooms";
 
+// Specific patterns for pattern mode - each has a name and the exact cells required
+export const SPECIFIC_PATTERNS: Record<string, { name: string; emoji: string; cells: [number, number][] }> = {
+    // Diagonals
+    "diagonal_down": { name: "Diagonal ↘", emoji: "↘️", cells: [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4]] },
+    "diagonal_up": { name: "Diagonal ↗", emoji: "↗️", cells: [[4, 0], [3, 1], [2, 2], [1, 3], [0, 4]] },
+
+    // X shape
+    "x_shape": { name: "X Pattern", emoji: "❌", cells: [[0, 0], [0, 4], [1, 1], [1, 3], [2, 2], [3, 1], [3, 3], [4, 0], [4, 4]] },
+
+    // Corners
+    "four_corners": { name: "Four Corners", emoji: "📐", cells: [[0, 0], [0, 4], [4, 0], [4, 4]] },
+
+    // Specific rows
+    "top_row": { name: "Top Row", emoji: "⬆️", cells: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]] },
+    "bottom_row": { name: "Bottom Row", emoji: "⬇️", cells: [[4, 0], [4, 1], [4, 2], [4, 3], [4, 4]] },
+    "middle_row": { name: "Middle Row", emoji: "➡️", cells: [[2, 0], [2, 1], [2, 2], [2, 3], [2, 4]] },
+
+    // Specific columns
+    "left_column": { name: "B Column", emoji: "🅱️", cells: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]] },
+    "right_column": { name: "O Column", emoji: "🅾️", cells: [[0, 4], [1, 4], [2, 4], [3, 4], [4, 4]] },
+
+    // T shapes
+    "t_top": { name: "T Shape ⊤", emoji: "🇹", cells: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [1, 2], [2, 2], [3, 2], [4, 2]] },
+    "t_bottom": { name: "T Shape ⊥", emoji: "🇹", cells: [[0, 2], [1, 2], [2, 2], [3, 2], [4, 0], [4, 1], [4, 2], [4, 3], [4, 4]] },
+
+    // L shapes  
+    "l_shape": { name: "L Shape", emoji: "🇱", cells: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [4, 1], [4, 2], [4, 3], [4, 4]] },
+
+    // Plus/Cross
+    "plus": { name: "Plus +", emoji: "➕", cells: [[0, 2], [1, 2], [2, 0], [2, 1], [2, 2], [2, 3], [2, 4], [3, 2], [4, 2]] },
+
+    // Frame/Border
+    "frame": { name: "Frame", emoji: "🖼️", cells: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [1, 0], [1, 4], [2, 0], [2, 4], [3, 0], [3, 4], [4, 0], [4, 1], [4, 2], [4, 3], [4, 4]] },
+
+    // Diamond
+    "diamond": { name: "Diamond", emoji: "💎", cells: [[0, 2], [1, 1], [1, 3], [2, 0], [2, 2], [2, 4], [3, 1], [3, 3], [4, 2]] },
+};
+
+// Get a random specific pattern
+export function getRandomSpecificPattern(): string {
+    const patternKeys = Object.keys(SPECIFIC_PATTERNS);
+    return patternKeys[Math.floor(Math.random() * patternKeys.length)];
+}
+
 // Game configuration by mode
 const GAME_CONFIG = {
     classic: { interval: 3000, pattern: "line", xpMultiplier: 1 },
     speed: { interval: 1500, pattern: "line", xpMultiplier: 1.5 },
-    pattern: { interval: 2500, pattern: "random", xpMultiplier: 2 },
+    pattern: { interval: 2500, pattern: "specific", xpMultiplier: 2 },
     blackout: { interval: 2000, pattern: "blackout", xpMultiplier: 3 },
 };
 
@@ -53,12 +97,18 @@ export const startGame = mutation({
 
         // Create game record
         const config = GAME_CONFIG[room.mode];
+
+        // For pattern mode, select a random specific pattern
+        const patternToUse = config.pattern === "specific"
+            ? getRandomSpecificPattern()
+            : config.pattern;
+
         const gameId = await ctx.db.insert("games", {
             roomId: args.roomId,
             calledNumbers: [],
             currentNumber: undefined,
             nextNumber,
-            pattern: config.pattern,
+            pattern: patternToUse,
             winnerId: undefined,
             startedAt: Date.now(),
             endedAt: undefined,
@@ -419,8 +469,14 @@ export function checkBingo(
         return card.every((row) => row.every((cell) => cell.daubed));
     }
 
-    // Check lines (horizontal, vertical, diagonal)
-    const patterns = [
+    // Check if this is a specific pattern
+    if (SPECIFIC_PATTERNS[pattern]) {
+        const specificPattern = SPECIFIC_PATTERNS[pattern];
+        return specificPattern.cells.every(([row, col]) => card[row][col].daubed);
+    }
+
+    // For "line" pattern or fallback - check any line (horizontal, vertical, diagonal)
+    const linePatterns = [
         // Horizontal
         [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]],
         [[1, 0], [1, 1], [1, 2], [1, 3], [1, 4]],
@@ -438,7 +494,7 @@ export function checkBingo(
         [[0, 4], [1, 3], [2, 2], [3, 1], [4, 0]],
     ];
 
-    return patterns.some((p) =>
+    return linePatterns.some((p) =>
         p.every(([row, col]) => card[row][col].daubed)
     );
 }
@@ -458,7 +514,14 @@ export function calculateDistanceToBingo(
         return remaining;
     }
 
-    const patterns = [
+    // Check if this is a specific pattern
+    if (SPECIFIC_PATTERNS[pattern]) {
+        const specificPattern = SPECIFIC_PATTERNS[pattern];
+        return specificPattern.cells.filter(([row, col]) => !card[row][col].daubed).length;
+    }
+
+    // For "line" pattern or fallback - find closest line
+    const linePatterns = [
         [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]],
         [[1, 0], [1, 1], [1, 2], [1, 3], [1, 4]],
         [[2, 0], [2, 1], [2, 2], [2, 3], [2, 4]],
@@ -474,10 +537,11 @@ export function calculateDistanceToBingo(
     ];
 
     let minDistance = 5;
-    patterns.forEach((p) => {
+    linePatterns.forEach((p) => {
         const remaining = p.filter(([row, col]) => !card[row][col].daubed).length;
         minDistance = Math.min(minDistance, remaining);
     });
 
     return minDistance;
 }
+

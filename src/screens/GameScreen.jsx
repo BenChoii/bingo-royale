@@ -15,6 +15,26 @@ const PVP_POWERUPS = [
     { type: "shield", icon: "🛡️", cost: 90, label: "Titan Shield", desc: "Protect yourself from attacks for 30 seconds!", needsTarget: false },
 ];
 
+// Specific patterns for pattern mode - cells are [row, col] pairs converted to flat index
+const SPECIFIC_PATTERNS = {
+    "diagonal_down": { name: "Diagonal ↘", emoji: "↘️", cells: [0, 6, 12, 18, 24] },
+    "diagonal_up": { name: "Diagonal ↗", emoji: "↗️", cells: [20, 16, 12, 8, 4] },
+    "x_shape": { name: "X Pattern", emoji: "❌", cells: [0, 4, 6, 8, 12, 16, 18, 20, 24] },
+    "four_corners": { name: "Four Corners", emoji: "📐", cells: [0, 4, 20, 24] },
+    "top_row": { name: "Top Row", emoji: "⬆️", cells: [0, 1, 2, 3, 4] },
+    "bottom_row": { name: "Bottom Row", emoji: "⬇️", cells: [20, 21, 22, 23, 24] },
+    "middle_row": { name: "Middle Row", emoji: "➡️", cells: [10, 11, 12, 13, 14] },
+    "left_column": { name: "B Column", emoji: "🅱️", cells: [0, 5, 10, 15, 20] },
+    "right_column": { name: "O Column", emoji: "🅾️", cells: [4, 9, 14, 19, 24] },
+    "t_top": { name: "T Shape ⊤", emoji: "🇹", cells: [0, 1, 2, 3, 4, 7, 12, 17, 22] },
+    "t_bottom": { name: "T Shape ⊥", emoji: "🇹", cells: [2, 7, 12, 17, 20, 21, 22, 23, 24] },
+    "l_shape": { name: "L Shape", emoji: "🇱", cells: [0, 5, 10, 15, 20, 21, 22, 23, 24] },
+    "plus": { name: "Plus +", emoji: "➕", cells: [2, 7, 10, 11, 12, 13, 14, 17, 22] },
+    "frame": { name: "Frame", emoji: "🖼️", cells: [0, 1, 2, 3, 4, 5, 9, 10, 14, 15, 19, 20, 21, 22, 23, 24] },
+    "diamond": { name: "Diamond", emoji: "💎", cells: [2, 6, 8, 10, 12, 14, 16, 18, 22] },
+    "line": { name: "5 IN A ROW", emoji: "➖", cells: [10, 11, 12, 13, 14] }, // fallback for line mode
+};
+
 const getLetter = (num) => {
     if (typeof num === "string") return "";
     if (num <= 15) return "B";
@@ -558,32 +578,37 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                 {/* Center: Game Area */}
                 <main className="game-main">
                     {/* Pattern Indicator */}
-                    {(isPlaying || roomDetails?.status === "waiting" || isFinished) && (
-                        <div className="pattern-indicator">
-                            <span className="pattern-label">Goal:</span>
-                            {(gameState?.pattern === "blackout" || roomDetails?.mode === "blackout") ? (
-                                <>
-                                    <div className="pattern-mini-grid blackout">
-                                        {[...Array(25)].map((_, i) => (
-                                            <div key={i} className="pattern-cell filled" />
-                                        ))}
-                                    </div>
-                                    <span className="pattern-name">BLACKOUT</span>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="pattern-mini-grid">
-                                        {[...Array(25)].map((_, i) => {
-                                            // Show horizontal line example (middle row)
-                                            const isHighlight = i >= 10 && i <= 14;
-                                            return <div key={i} className={`pattern-cell ${isHighlight ? "filled" : ""}`} />;
-                                        })}
-                                    </div>
-                                    <span className="pattern-name">5 IN A ROW</span>
-                                </>
-                            )}
-                        </div>
-                    )}
+                    {(isPlaying || roomDetails?.status === "waiting" || isFinished) && (() => {
+                        const patternKey = gameState?.pattern || (roomDetails?.mode === "blackout" ? "blackout" : "line");
+                        const isBlackout = patternKey === "blackout";
+                        const patternData = SPECIFIC_PATTERNS[patternKey] || SPECIFIC_PATTERNS["line"];
+
+                        return (
+                            <div className="pattern-indicator">
+                                <span className="pattern-label">Goal:</span>
+                                {isBlackout ? (
+                                    <>
+                                        <div className="pattern-mini-grid blackout">
+                                            {[...Array(25)].map((_, i) => (
+                                                <div key={i} className="pattern-cell filled" />
+                                            ))}
+                                        </div>
+                                        <span className="pattern-name">BLACKOUT</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="pattern-mini-grid">
+                                            {[...Array(25)].map((_, i) => {
+                                                const isHighlight = patternData.cells.includes(i);
+                                                return <div key={i} className={`pattern-cell ${isHighlight ? "filled" : ""}`} />;
+                                            })}
+                                        </div>
+                                        <span className="pattern-name">{patternData.emoji} {patternData.name}</span>
+                                    </>
+                                )}
+                            </div>
+                        );
+                    })()}
 
                     {/* Number Caller */}
                     <div className="caller-display">
@@ -749,7 +774,7 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                         )}
                         {isFinished && isHost && (
                             <button className="btn btn-primary btn-large btn-replay" onClick={handleStartGame}>
-                                🔄 Start New Tournament
+                                🔄 Start New Match
                             </button>
                         )}
                     </div>

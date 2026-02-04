@@ -572,12 +572,30 @@
 
     .quick-actions {
         flex-direction: column;
+        gap: 0.75rem;
     }
 
     .join-code-box {
-        flex-direction: column;
+        flex-direction: row;
+        width: 100%;
+    }
+
+    .join-code-box .code-input {
+        font-size: 1rem;
+        padding: 0.75rem;
+        letter-spacing: 2px;
+    }
+
+    .join-code-box .btn {
+        white-space: nowrap;
+        padding: 0.75rem 1rem;
+    }
+
+    .quick-actions>.btn {
+        width: 100%;
     }
 }
+
 /* Shop Button */
 .btn-shop {
     background: linear-gradient(135deg, hsl(45, 100%, 50%) 0%, hsl(35, 100%, 45%) 100%) !important;

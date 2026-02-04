@@ -179,3 +179,17 @@ export const getAvatars = query({
         return AVATARS;
     },
 });
+
+// Add gems to all users (for testing)
+export const addGemsToAllUsers = mutation({
+    args: { amount: v.number() },
+    handler: async (ctx, args) => {
+        const users = await ctx.db.query("users").collect();
+        for (const user of users) {
+            await ctx.db.patch(user._id, {
+                coins: user.coins + args.amount,
+            });
+        }
+        return { success: true, usersUpdated: users.length };
+    },
+});

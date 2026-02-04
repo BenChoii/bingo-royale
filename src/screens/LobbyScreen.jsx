@@ -133,18 +133,12 @@ export default function LobbyScreen({ userId, onJoinRoom, onLogout }) {
                                 <span className="xp-text">{user.xp}/{user.xpToNext} XP</span>
                             </div>
                             <div className="currency-info">
-                                <span className="user-coins">💎 {user.coins} Gems</span>
-                                <span className="user-streak">{user.currentStreak > 0 && `🔥 ${user.currentStreak}`}</span>
-                                {user.coins < 100 ? (
-                                    <button className="topup-btn pulse-anim" onClick={() => setShowShop(true)}>
-                                        🆘 Get Gems
+                                <span className="user-coins">💎 {user.coins?.toLocaleString()} Gems</span>
+                                {user.currentStreak > 0 && <span className="user-streak">🔥 {user.currentStreak}</span>}
+                                {canClaimReward?.canClaim && (
+                                    <button className="claim-reward-btn anim-bounce" onClick={handleTopUp}>
+                                        🎁 Daily
                                     </button>
-                                ) : (
-                                    canClaimReward?.canClaim && (
-                                        <button className="claim-reward-btn anim-bounce" onClick={handleTopUp}>
-                                            🎁 Claim Daily Gems
-                                        </button>
-                                    )
                                 )}
                             </div>
                         </div>
