@@ -16,6 +16,8 @@ import type * as daily from "../daily.js";
 import type * as games from "../games.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as luckyline from "../luckyline.js";
+import type * as paymentHelpers from "../paymentHelpers.js";
+import type * as payments from "../payments.js";
 import type * as powerups from "../powerups.js";
 import type * as rooms from "../rooms.js";
 import type * as users from "../users.js";
@@ -35,6 +37,8 @@ declare const fullApi: ApiFromModules<{
   games: typeof games;
   leaderboard: typeof leaderboard;
   luckyline: typeof luckyline;
+  paymentHelpers: typeof paymentHelpers;
+  payments: typeof payments;
   powerups: typeof powerups;
   rooms: typeof rooms;
   users: typeof users;

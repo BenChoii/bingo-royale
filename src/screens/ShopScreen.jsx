@@ -1,10 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useNotification } from "../components/Notifications";
 import CosmeticPreview from "../components/CosmeticPreview";
 import "./ShopScreen.css";
+
+// Stripe gem packages
+const GEM_PACKAGES = [
+    { id: "starter", name: "Starter", gems: 500, price: "$1.99", priceNum: 199 },
+    { id: "popular", name: "Value", gems: 1500, price: "$4.99", priceNum: 499, popular: true },
+    { id: "mega", name: "Pro", gems: 4000, price: "$9.99", priceNum: 999, bonus: "Best Value" },
+    { id: "ultra", name: "Whale", gems: 10000, price: "$19.99", priceNum: 1999, bonus: "+67%" },
+];
 
 // Visual previews for cosmetics
 const COSMETIC_PREVIEWS = {
@@ -47,6 +55,59 @@ export default function ShopScreen({ userId, onClose }) {
     const startLuckyLine = useMutation(api.luckyline.startLuckyLine);
     const purchaseCosmetic = useMutation(api.cosmetics.purchaseCosmetic);
     const equipCosmetic = useMutation(api.cosmetics.equipCosmetic);
+    const createCheckout = useAction(api.payments.createCheckoutSession);
+    const verifyPayment = useAction(api.payments.verifyPayment);
+
+    const [processingPayment, setProcessingPayment] = useState(false);
+
+    // Check for payment success on return from Stripe
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get("session_id");
+        const packageId = urlParams.get("package");
+
+        if (sessionId && packageId) {
+            // Verify payment and grant gems
+            verifyPayment({ sessionId }).then((result) => {
+                if (result.success) {
+                    showNotification(`💎 +${result.gems?.toLocaleString()} Gems added to your account!`, "success");
+                } else {
+                    showNotification(result.error || "Payment verification failed", "error");
+                }
+                // Clear URL params
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }).catch((err) => {
+                console.error("Payment verification error:", err);
+            });
+        }
+    }, [verifyPayment, showNotification]);
+
+    const handleBuyGems = async (packageId) => {
+        if (processingPayment) return;
+        setProcessingPayment(true);
+
+        try {
+            const currentUrl = window.location.origin + window.location.pathname;
+            const result = await createCheckout({
+                userId,
+                packageId,
+                successUrl: currentUrl,
+                cancelUrl: currentUrl,
+            });
+
+            if (result.url) {
+                // Redirect to Stripe Checkout
+                window.location.href = result.url;
+            } else {
+                showNotification("Failed to create checkout session", "error");
+            }
+        } catch (error) {
+            console.error("Checkout error:", error);
+            showNotification("Payment error. Please try again.", "error");
+        } finally {
+            setProcessingPayment(false);
+        }
+    };
 
     const handleClaimDaily = async () => {
         const result = await claimDaily({ userId });
@@ -162,21 +223,22 @@ export default function ShopScreen({ userId, onClose }) {
                                 {/* Gem Packages */}
                                 <h3>💰 Buy Gems</h3>
                                 <div className="gem-packages">
-                                    {[
-                                        { name: "Starter", gems: 120, price: "$0.99", bonus: "+20%" },
-                                        { name: "Value", gems: 650, price: "$4.99", bonus: "+30%" },
-                                        { name: "Pro", gems: 1400, price: "$9.99", bonus: "+40%", popular: true },
-                                        { name: "Whale", gems: 8000, price: "$49.99", bonus: "+60%" },
-                                    ].map(pkg => (
+                                    {GEM_PACKAGES.map(pkg => (
                                         <motion.div
-                                            key={pkg.name}
+                                            key={pkg.id}
                                             className={`gem-package ${pkg.popular ? "popular" : ""}`}
                                             whileHover={{ scale: 1.03, y: -5 }}
                                         >
                                             {pkg.popular && <span className="popular-tag">Most Popular!</span>}
+                                            {pkg.bonus && <span className="bonus-tag">{pkg.bonus}</span>}
                                             <div className="pkg-gems">💎 {pkg.gems.toLocaleString()}</div>
-                                            <div className="pkg-bonus">{pkg.bonus} Bonus</div>
-                                            <button className="pkg-buy">{pkg.price}</button>
+                                            <button
+                                                className="pkg-buy"
+                                                onClick={() => handleBuyGems(pkg.id)}
+                                                disabled={processingPayment}
+                                            >
+                                                {processingPayment ? "..." : pkg.price}
+                                            </button>
                                         </motion.div>
                                     ))}
                                 </div>

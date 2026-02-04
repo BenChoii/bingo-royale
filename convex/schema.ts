@@ -221,4 +221,13 @@ export default defineSchema({
         purchasedAt: v.number(),
     }).index("by_user", ["userId"])
         .index("by_user_cosmetic", ["userId", "cosmeticId"]),
+
+    // Stripe Purchases (for idempotency)
+    purchases: defineTable({
+        userId: v.id("users"),
+        sessionId: v.string(),
+        gems: v.number(),
+        createdAt: v.number(),
+    }).index("by_session", ["sessionId"])
+        .index("by_user", ["userId"]),
 });
