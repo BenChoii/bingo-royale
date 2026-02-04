@@ -12,6 +12,7 @@ const PVP_POWERUPS = [
     { type: "doublexp", icon: "✨", cost: 75, label: "2x XP", desc: "Doubles the XP earned from this game." },
     { type: "freeze", icon: "🧊", cost: 120, label: "Freeze Ray", desc: "Freeze an opponent's card for 7 seconds!", needsTarget: true },
     { type: "shuffle", icon: "🌀", cost: 100, label: "Chaos Scramble", desc: "Change one random undaubed number on an opponent's card!", needsTarget: true },
+    { type: "undaub", icon: "🚫", cost: 110, label: "Undaub", desc: "Remove a daubed number from an opponent's card!", needsTarget: true },
     { type: "shield", icon: "🛡️", cost: 90, label: "Titan Shield", desc: "Protect yourself from attacks for 30 seconds!", needsTarget: false },
 ];
 

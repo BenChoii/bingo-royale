@@ -11,6 +11,7 @@ const POWERUP_COSTS = {
     shuffle: 80,
     blind: 100,
     shield: 90,
+    undaub: 110,
 };
 
 type PowerupType = keyof typeof POWERUP_COSTS;
@@ -28,7 +29,8 @@ export const usePowerup = mutation({
             v.literal("freeze"),
             v.literal("shuffle"),
             v.literal("blind"),
-            v.literal("shield")
+            v.literal("shield"),
+            v.literal("undaub")
         ),
         targetUserId: v.optional(v.id("users")),
     },
@@ -189,7 +191,8 @@ export const usePowerup = mutation({
                     }
                     if (unDaubed.length > 0) {
                         const pos = unDaubed[Math.floor(Math.random() * unDaubed.length)];
-                        const newCard = [...targetPlayer.card];
+                        // Deep copy the card to avoid mutation issues
+                        const newCard = targetPlayer.card.map(row => row.map(cell => ({ ...cell })));
                         const oldVal = newCard[pos.r][pos.c].value;
                         const newVal = Math.floor(Math.random() * 75) + 1;
                         newCard[pos.r][pos.c].value = newVal;
@@ -212,6 +215,51 @@ export const usePowerup = mutation({
                 });
                 effectDescription = "activated a TITAN SHIELD! 🛡️ (30s)";
                 effectApplied = true;
+                break;
+            }
+
+            case "undaub": {
+                if (!args.targetUserId) return { success: false, error: "Target required for Undaub!" };
+                const targetPlayer = await ctx.db
+                    .query("roomPlayers")
+                    .withIndex("by_room", (q) => q.eq("roomId", game.roomId))
+                    .filter((q) => q.eq(q.field("odId"), args.targetUserId))
+                    .first();
+
+                if (!targetPlayer) return { success: false, error: "Target player not found" };
+                if (targetPlayer.shieldUntil && targetPlayer.shieldUntil > Date.now()) {
+                    effectDescription = `tried to undaub ${targetPlayer.odId} but they were SHIELDED!`;
+                    effectApplied = true;
+                } else {
+                    // Find daubed cells (excluding FREE space)
+                    const daubedCells = [];
+                    for (let r = 0; r < 5; r++) {
+                        for (let c = 0; c < 5; c++) {
+                            if (targetPlayer.card[r][c].daubed && targetPlayer.card[r][c].value !== "FREE") {
+                                daubedCells.push({ r, c });
+                            }
+                        }
+                    }
+                    if (daubedCells.length > 0) {
+                        const pos = daubedCells[Math.floor(Math.random() * daubedCells.length)];
+                        // Deep copy the card
+                        const newCard = targetPlayer.card.map(row => row.map(cell => ({ ...cell })));
+                        const removedVal = newCard[pos.r][pos.c].value;
+                        newCard[pos.r][pos.c].daubed = false;
+
+                        const distance = calculateDistanceToBingo(newCard, game.pattern);
+                        await ctx.db.patch(targetPlayer._id, {
+                            card: newCard,
+                            daubedCount: Math.max(0, targetPlayer.daubedCount - 1),
+                            distanceToBingo: distance,
+                        });
+                        const targetUser = await ctx.db.get(args.targetUserId);
+                        effectDescription = `UNDAUBED ${targetUser?.name || "someone's"} card! (Removed ${removedVal}) 🚫`;
+                        effectApplied = true;
+                    } else {
+                        return { success: false, error: "No daubed numbers to remove!" };
+                    }
+                }
                 break;
             }
 
