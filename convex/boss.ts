@@ -254,8 +254,8 @@ export const bossCallNumber = mutation({
 
         if (!bossGame) return;
 
-        // Check timeout
-        if (Date.now() > (bossGame.expiresAt || 0)) {
+        // Check timeout - only if expiresAt is actually set
+        if (bossGame.expiresAt && Date.now() > bossGame.expiresAt) {
             await ctx.db.patch(bossGame._id, { status: "lost" });
 
             // System message for defeat
