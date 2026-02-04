@@ -103,7 +103,7 @@ export const joinBossBattle = mutation({
     },
 });
 
-// 2. Start the encounter
+// 2. Start the encounter - auto-includes ALL room players
 export const startBossBattle = mutation({
     args: { roomId: v.id("rooms") },
     handler: async (ctx, args) => {
@@ -113,27 +113,45 @@ export const startBossBattle = mutation({
             .filter((q) => q.eq(q.field("status"), "preparing"))
             .first();
 
-        if (!bossGame || bossGame.participants.length === 0) {
-            return { success: false, error: "At least one player must wager!" };
+        if (!bossGame) {
+            return { success: false, error: "No boss battle to start. Select a boss first!" };
         }
 
         const config = BOSS_CONFIG[bossGame.bossLevel as keyof typeof BOSS_CONFIG];
         const startedAt = Date.now();
+
+        // Get ALL players in the room and add them to the battle
+        const allRoomPlayers = await ctx.db
+            .query("roomPlayers")
+            .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+            .collect();
+
+        const allParticipantIds = allRoomPlayers.map(p => p.odId);
+
+        // Give each player a fresh card for the boss battle
+        for (const player of allRoomPlayers) {
+            await ctx.db.patch(player._id, {
+                card: generateBingoCard(),
+                daubedCount: 1,
+                distanceToBingo: 4,
+            });
+        }
 
         await ctx.db.patch(bossGame._id, {
             status: "active",
             startedAt,
             expiresAt: startedAt + config.duration,
             calledNumbers: [],
+            participants: allParticipantIds, // All room players participate!
         });
 
         // System message
         await ctx.db.insert("messages", {
             roomId: args.roomId,
-            userId: bossGame.participants[0], // First player as proxy
+            userId: allParticipantIds[0], // First player as proxy
             userName: "System",
             userAvatar: "👿",
-            content: `THE ${config.name.toUpperCase()} HAS AWOKEN! Defeat it before time runs out!`,
+            content: `THE ${config.name.toUpperCase()} HAS AWOKEN! All ${allParticipantIds.length} players are battling together!`,
             type: "system",
             createdAt: Date.now(),
         });
