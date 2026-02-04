@@ -109,18 +109,27 @@ export default function GameScreen({ userId, roomId, onLeave }) {
         }
     }, [messages]);
 
-    // Show notifications for new system messages
+    // Show notifications for new system messages (but not on initial load)
     const lastMessageCount = useRef(0);
+    const hasInitialized = useRef(false);
     useEffect(() => {
-        if (messages && messages.length > lastMessageCount.current) {
+        if (!messages) return;
+
+        // On first load, just set the baseline count without showing notifications
+        if (!hasInitialized.current) {
+            lastMessageCount.current = messages.length;
+            hasInitialized.current = true;
+            return;
+        }
+
+        // Only show notifications for truly NEW messages after initial load
+        if (messages.length > lastMessageCount.current) {
             const newMessages = messages.slice(lastMessageCount.current);
             newMessages.forEach(msg => {
                 if (msg.type === "system" && msg.userId !== userId) {
                     showNotification(msg.content, "info");
                 }
             });
-            lastMessageCount.current = messages.length;
-        } else if (messages) {
             lastMessageCount.current = messages.length;
         }
     }, [messages, userId, showNotification]);
