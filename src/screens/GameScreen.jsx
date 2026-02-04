@@ -799,12 +799,12 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                                 })}
                             </div>
                         )}
-                        {isFinished && activeBoss?.status === "preparing" && isHost && (
+                        {isFinished && activeBoss?.status === "preparing" && (
                             <button className="btn btn-accent btn-large animate-pulse" onClick={handleStartBossAction}>
                                 ⚔️ START BOSS RAID
                             </button>
                         )}
-                        {isFinished && isHost && (
+                        {isFinished && (
                             <button className="btn btn-primary btn-large btn-replay" onClick={handleStartGame}>
                                 🔄 Start New Match
                             </button>
