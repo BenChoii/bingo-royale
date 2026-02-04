@@ -9,7 +9,7 @@ const ONBOARDING_STEPS = [
         subtitle: "The Ultimate Social Bingo Experience",
         content: (
             <div className="welcome-splash">
-                <div className="welcome-logo">🎰</div>
+                <div className="welcome-logo">👑</div>
                 <p className="welcome-tagline">
                     Play with friends, compete for glory, and <strong>collect epic rewards!</strong>
                 </p>
