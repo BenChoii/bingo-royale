@@ -537,6 +537,58 @@
     overflow-y: auto;
 }
 
+/* Pattern Indicator */
+.pattern-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    background: hsla(240, 15%, 12%, 0.9);
+    border: 1px solid hsla(45, 100%, 50%, 0.3);
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+}
+
+.pattern-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: hsl(240, 10%, 60%);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.pattern-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 10px);
+    grid-template-rows: repeat(5, 10px);
+    gap: 1px;
+}
+
+.pattern-cell {
+    width: 10px;
+    height: 10px;
+    background: hsla(240, 15%, 30%, 0.5);
+    border-radius: 1px;
+}
+
+.pattern-cell.filled {
+    background: hsl(45, 100%, 50%);
+    box-shadow: 0 0 4px hsla(45, 100%, 50%, 0.6);
+}
+
+.pattern-mini-grid.blackout .pattern-cell.filled {
+    background: hsl(275, 80%, 55%);
+    box-shadow: 0 0 4px hsla(275, 80%, 55%, 0.6);
+}
+
+.pattern-name {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: hsl(45, 100%, 60%);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 /* Caller Display */
 .caller-display {
     display: flex;
@@ -612,6 +664,14 @@
     color: hsl(45, 100%, 60%);
 }
 
+/* Cards Row - Side by side layout */
+.cards-row {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    justify-content: center;
+}
+
 /* Bingo Card */
 .bingo-card-wrapper {
     background: hsla(240, 15%, 12%, 0.9);
@@ -644,6 +704,102 @@
     grid-template-columns: repeat(5, 1fr);
     gap: 0.35rem;
     position: relative;
+}
+
+/* Opponent Cards Section */
+.opponent-cards-section {
+    margin-top: 0;
+    padding: 0.75rem;
+    background: hsla(240, 15%, 10%, 0.8);
+    border: 1px solid hsla(255, 50%, 70%, 0.1);
+    border-radius: 16px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.opponent-cards-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: hsl(240, 10%, 70%);
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.opponent-cards-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.opponent-card-mini {
+    background: hsla(240, 15%, 15%, 0.9);
+    border: 1px solid hsla(255, 50%, 70%, 0.15);
+    border-radius: 10px;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 90px;
+}
+
+.opponent-card-mini:hover {
+    border-color: hsl(275, 80%, 55%);
+    transform: scale(1.05);
+}
+
+.opponent-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    margin-bottom: 0.4rem;
+}
+
+.opponent-avatar {
+    font-size: 1.2rem;
+}
+
+.opponent-name {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.opponent-distance {
+    font-size: 0.55rem;
+    font-weight: 600;
+    color: hsl(45, 100%, 60%);
+}
+
+.opponent-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 14px);
+    grid-template-rows: repeat(5, 14px);
+    gap: 1px;
+}
+
+.opponent-cell {
+    width: 14px;
+    height: 14px;
+    background: hsla(240, 15%, 25%, 0.6);
+    border-radius: 2px;
+}
+
+.opponent-cell.called {
+    background: hsla(45, 100%, 50%, 0.3);
+    border: 1px solid hsla(45, 100%, 50%, 0.5);
+}
+
+.opponent-cell.daubed {
+    background: hsl(145, 80%, 50%);
+    box-shadow: 0 0 4px hsla(145, 80%, 50%, 0.6);
+}
+
+.opponent-cell.free {
+    background: hsla(45, 100%, 50%, 0.5);
 }
 
 .freeze-overlay {

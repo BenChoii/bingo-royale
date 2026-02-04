@@ -557,6 +557,34 @@ export default function GameScreen({ userId, roomId, onLeave }) {
 
                 {/* Center: Game Area */}
                 <main className="game-main">
+                    {/* Pattern Indicator */}
+                    {(isPlaying || roomDetails?.status === "waiting" || isFinished) && (
+                        <div className="pattern-indicator">
+                            <span className="pattern-label">Goal:</span>
+                            {(gameState?.pattern === "blackout" || roomDetails?.mode === "blackout") ? (
+                                <>
+                                    <div className="pattern-mini-grid blackout">
+                                        {[...Array(25)].map((_, i) => (
+                                            <div key={i} className="pattern-cell filled" />
+                                        ))}
+                                    </div>
+                                    <span className="pattern-name">BLACKOUT</span>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="pattern-mini-grid">
+                                        {[...Array(25)].map((_, i) => {
+                                            // Show horizontal line example (middle row)
+                                            const isHighlight = i >= 10 && i <= 14;
+                                            return <div key={i} className={`pattern-cell ${isHighlight ? "filled" : ""}`} />;
+                                        })}
+                                    </div>
+                                    <span className="pattern-name">5 IN A ROW</span>
+                                </>
+                            )}
+                        </div>
+                    )}
+
                     {/* Number Caller */}
                     <div className="caller-display">
                         {isPlaying && gameState?.currentNumber ? (
@@ -627,47 +655,50 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                         )}
                     </div>
 
-                    {/* Bingo Card */}
-                    <div className="bingo-card-wrapper">
-                        <div className="card-header">
-                            <span style={{ background: "#3498db" }}>B</span>
-                            <span style={{ background: "#2ecc71" }}>I</span>
-                            <span style={{ background: "#9b59b6" }}>N</span>
-                            <span style={{ background: "#e67e22" }}>G</span>
-                            <span style={{ background: "#e74c3c" }}>O</span>
-                        </div>
-                        <div className="bingo-card">
-                            {gameState?.players?.find(p => p.odId === userId)?.frozenUntil > Date.now() && (
-                                <div className="freeze-overlay anim-shimmer">
-                                    <span className="freeze-icon">🧊</span>
-                                    <span className="freeze-text">FROZEN!</span>
-                                </div>
-                            )}
-                            {gameState?.players?.find(p => p.odId === userId)?.scrambledAt > Date.now() - 3000 && (
-                                <div className="scramble-overlay glitch-shiver">
-                                    <span className="scramble-icon">🌀</span>
-                                    <span className="scramble-text">RE-SHUFFLED!</span>
-                                </div>
-                            )}
-                            {myCard?.map((row, rowIndex) =>
-                                row.map((cell, colIndex) => {
-                                    const isCalled = activeBoss?.status === "active"
-                                        ? (activeBoss.calledNumbers || []).includes(cell.value)
-                                        : (gameState?.calledNumbers || []).includes(cell.value);
-                                    const isPeeked = cell.value === peekedNumber;
-                                    return (
-                                        <div
-                                            key={`${rowIndex}-${colIndex}`}
-                                            className={`bingo-cell ${isCalled ? "called" : ""} ${cell.daubed ? "daubed" : ""
-                                                } ${cell.value === "FREE" ? "free-space" : ""} ${isPeeked ? "peeked-highlight" : ""}`}
-                                            onClick={() => isCalled && handleCellClick(cell.value)}
-                                            style={{ cursor: isCalled && !cell.daubed ? "pointer" : "default" }}
-                                        >
-                                            {cell.value === "FREE" ? "⭐" : cell.value}
-                                        </div>
-                                    );
-                                })
-                            )}
+                    {/* Cards Row - Main card + Opponents side by side */}
+                    <div className="cards-row">
+                        {/* Bingo Card */}
+                        <div className="bingo-card-wrapper">
+                            <div className="card-header">
+                                <span style={{ background: "#3498db" }}>B</span>
+                                <span style={{ background: "#2ecc71" }}>I</span>
+                                <span style={{ background: "#9b59b6" }}>N</span>
+                                <span style={{ background: "#e67e22" }}>G</span>
+                                <span style={{ background: "#e74c3c" }}>O</span>
+                            </div>
+                            <div className="bingo-card">
+                                {gameState?.players?.find(p => p.odId === userId)?.frozenUntil > Date.now() && (
+                                    <div className="freeze-overlay anim-shimmer">
+                                        <span className="freeze-icon">🧊</span>
+                                        <span className="freeze-text">FROZEN!</span>
+                                    </div>
+                                )}
+                                {gameState?.players?.find(p => p.odId === userId)?.scrambledAt > Date.now() - 3000 && (
+                                    <div className="scramble-overlay glitch-shiver">
+                                        <span className="scramble-icon">🌀</span>
+                                        <span className="scramble-text">RE-SHUFFLED!</span>
+                                    </div>
+                                )}
+                                {myCard?.map((row, rowIndex) =>
+                                    row.map((cell, colIndex) => {
+                                        const isCalled = activeBoss?.status === "active"
+                                            ? (activeBoss.calledNumbers || []).includes(cell.value)
+                                            : (gameState?.calledNumbers || []).includes(cell.value);
+                                        const isPeeked = cell.value === peekedNumber;
+                                        return (
+                                            <div
+                                                key={`${rowIndex}-${colIndex}`}
+                                                className={`bingo-cell ${isCalled ? "called" : ""} ${cell.daubed ? "daubed" : ""
+                                                    } ${cell.value === "FREE" ? "free-space" : ""} ${isPeeked ? "peeked-highlight" : ""}`}
+                                                onClick={() => isCalled && handleCellClick(cell.value)}
+                                                style={{ cursor: isCalled && !cell.daubed ? "pointer" : "default" }}
+                                            >
+                                                {cell.value === "FREE" ? "⭐" : cell.value}
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
                         </div>
                     </div>
 
