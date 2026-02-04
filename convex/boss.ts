@@ -360,3 +360,164 @@ export const getActiveBoss = query({
             .first();
     },
 });
+
+// Boss-specific powerups
+const BOSS_POWERUP_COSTS = {
+    quickdaub: 50,
+    wild: 100,
+    freeze: 120, // Freezes boss timer
+    shield: 90,
+};
+
+export const useBossPowerup = mutation({
+    args: {
+        roomId: v.id("rooms"),
+        userId: v.id("users"),
+        type: v.union(
+            v.literal("quickdaub"),
+            v.literal("wild"),
+            v.literal("freeze"),
+            v.literal("shield")
+        ),
+    },
+    handler: async (ctx, args) => {
+        const user = await ctx.db.get(args.userId);
+        if (!user) return { success: false, error: "User not found" };
+
+        const cost = BOSS_POWERUP_COSTS[args.type as keyof typeof BOSS_POWERUP_COSTS];
+        if (user.coins < cost) {
+            return { success: false, error: "Not enough Gems" };
+        }
+
+        const bossGame = await ctx.db
+            .query("bossGames")
+            .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+            .filter((q) => q.eq(q.field("status"), "active"))
+            .first();
+
+        if (!bossGame) {
+            return { success: false, error: "No active boss battle" };
+        }
+
+        const player = await ctx.db
+            .query("roomPlayers")
+            .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+            .filter((q) => q.eq(q.field("odId"), args.userId))
+            .first();
+
+        if (!player) return { success: false, error: "Player not in room" };
+
+        let effectDescription = "";
+        let effectApplied = false;
+
+        switch (args.type) {
+            case "quickdaub": {
+                // Daub one random cell and deal 1 damage to boss
+                const unDaubed = [];
+                for (let r = 0; r < 5; r++) {
+                    for (let c = 0; c < 5; c++) {
+                        if (!player.card[r][c].daubed) {
+                            unDaubed.push({ r, c });
+                        }
+                    }
+                }
+                if (unDaubed.length > 0) {
+                    const pos = unDaubed[Math.floor(Math.random() * unDaubed.length)];
+                    const newCard = [...player.card];
+                    newCard[pos.r][pos.c].daubed = true;
+
+                    await ctx.db.patch(player._id, { card: newCard });
+
+                    // Damage the boss
+                    const newHealth = Math.max(0, bossGame.health - 1);
+                    await ctx.db.patch(bossGame._id, { health: newHealth });
+
+                    effectDescription = `used QUICK DAUB! Boss took 1 damage! (HP: ${newHealth}/${bossGame.maxHealth})`;
+                    effectApplied = true;
+
+                    // Check for victory
+                    if (newHealth <= 0) {
+                        await ctx.db.patch(bossGame._id, { status: "won" });
+                    }
+                }
+                break;
+            }
+
+            case "wild": {
+                // Daub two random cells and deal 2 damage to boss
+                const availableCells = [];
+                for (let r = 0; r < 5; r++) {
+                    for (let c = 0; c < 5; c++) {
+                        if (!player.card[r][c].daubed) availableCells.push({ r, c });
+                    }
+                }
+                if (availableCells.length >= 2) {
+                    const newCard = [...player.card];
+                    for (let i = 0; i < 2; i++) {
+                        const idx = Math.floor(Math.random() * availableCells.length);
+                        const { r, c } = availableCells.splice(idx, 1)[0];
+                        newCard[r][c].daubed = true;
+                    }
+                    await ctx.db.patch(player._id, { card: newCard });
+
+                    // Damage the boss
+                    const newHealth = Math.max(0, bossGame.health - 2);
+                    await ctx.db.patch(bossGame._id, { health: newHealth });
+
+                    effectDescription = `used WILD! Boss took 2 damage! (HP: ${newHealth}/${bossGame.maxHealth})`;
+                    effectApplied = true;
+
+                    // Check for victory
+                    if (newHealth <= 0) {
+                        await ctx.db.patch(bossGame._id, { status: "won" });
+                    }
+                }
+                break;
+            }
+
+            case "freeze": {
+                // Freeze the boss timer - extend expiresAt by 10 seconds
+                if (bossGame.expiresAt) {
+                    await ctx.db.patch(bossGame._id, {
+                        expiresAt: bossGame.expiresAt + 10000, // +10 seconds
+                    });
+                    effectDescription = "used FREEZE RAY on the boss! ❄️ Timer extended by 10 seconds!";
+                    effectApplied = true;
+                }
+                break;
+            }
+
+            case "shield": {
+                // Protect from boss attacks for 30 seconds
+                await ctx.db.patch(player._id, {
+                    shieldUntil: Date.now() + 30000,
+                });
+                effectDescription = "activated TITAN SHIELD! 🛡️ Protected from boss attacks for 30s!";
+                effectApplied = true;
+                break;
+            }
+        }
+
+        if (!effectApplied) {
+            return { success: false, error: "Power-up could not be applied" };
+        }
+
+        // Deduct Gems
+        await ctx.db.patch(args.userId, {
+            coins: user.coins - cost,
+        });
+
+        // Send system message
+        await ctx.db.insert("messages", {
+            roomId: args.roomId,
+            userId: args.userId,
+            userName: "System",
+            userAvatar: "⚡",
+            content: `${user.name} ${effectDescription}`,
+            type: "system",
+            createdAt: Date.now(),
+        });
+
+        return { success: true };
+    },
+});

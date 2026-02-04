@@ -87,6 +87,7 @@ export default function GameScreen({ userId, roomId, onLeave }) {
     const startBossBattle = useMutation(api.boss.startBossBattle);
     const daubBossNumber = useMutation(api.boss.daubBossNumber);
     const bossCallNumber = useMutation(api.boss.bossCallNumber);
+    const useBossPowerup = useMutation(api.boss.useBossPowerup);
     const claimDailyReward = useMutation(api.daily.claimDailyReward);
 
     const activeBoss = useQuery(api.boss.getActiveBoss, { roomId });
@@ -153,6 +154,33 @@ export default function GameScreen({ userId, roomId, onLeave }) {
     };
 
     const handleUsePowerup = async (type, targetId) => {
+        // Boss battle mode - use boss-specific powerups
+        if (activeBoss?.status === "active") {
+            // Only allow boss-compatible powerups
+            const bossPowerups = ["quickdaub", "wild", "freeze", "shield"];
+            if (!bossPowerups.includes(type)) {
+                showNotification("This power-up isn't available during boss battles!", "error");
+                return;
+            }
+
+            try {
+                const result = await useBossPowerup({
+                    roomId,
+                    userId,
+                    type,
+                });
+                if (result.success) {
+                    showNotification(`Power-up activated!`, "info");
+                } else {
+                    showNotification(result.error || "Failed to use power-up", "error");
+                }
+            } catch (error) {
+                console.error("Failed to use boss power-up:", error);
+            }
+            return;
+        }
+
+        // Regular game mode
         if (!gameState) return;
 
         const poConfig = PVP_POWERUPS.find(p => p.type === type);
