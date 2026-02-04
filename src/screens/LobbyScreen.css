@@ -190,20 +190,18 @@
 }
 
 .join-code-box {
-    flex: 1;
-    min-width: 200px;
-    max-width: 350px;
     display: flex;
     gap: 0.5rem;
+    width: auto;
 }
 
 .code-input {
-    flex: 1;
-    padding: 1rem;
-    font-size: 1.25rem;
+    width: 170px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
     font-family: monospace;
     font-weight: 700;
-    letter-spacing: 4px;
+    letter-spacing: 3px;
     text-align: center;
     text-transform: uppercase;
     background: hsla(240, 15%, 18%, 0.9);
@@ -374,10 +372,22 @@
     font-weight: 500;
 }
 
+.player-trend {
+    display: flex;
+    align-items: center;
+    padding: 0 0.5rem;
+}
+
+.player-trend .sparkline {
+    opacity: 0.9;
+}
+
 .player-wins {
     font-size: 0.85rem;
     color: hsl(145, 70%, 50%);
     font-weight: 600;
+    min-width: 55px;
+    text-align: right;
 }
 
 /* Modal */

@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useNotification } from "../components/Notifications";
 import WelcomeDialog from "../components/WelcomeDialog";
+import Sparkline, { generateTrendData } from "../components/Sparkline";
 import ShopScreen from "./ShopScreen";
 import LuckyLineGame from "./LuckyLineGame";
 import "./LobbyScreen.css";
@@ -244,14 +245,20 @@ export default function LobbyScreen({ userId, onJoinRoom, onLogout }) {
                 <section className="leaderboard-section">
                     <h2>🏆 Top Players</h2>
                     <div className="leaderboard-list">
-                        {leaderboard?.map((player, index) => (
-                            <div key={player.odId} className="leaderboard-row">
-                                <span className="rank">{getRankEmoji(index + 1)}</span>
-                                <span className="player-avatar">{player.avatar}</span>
-                                <span className="player-name">{player.name}</span>
-                                <span className="player-wins">{player.wins} wins</span>
-                            </div>
-                        ))}
+                        {leaderboard?.map((player, index) => {
+                            const trendData = generateTrendData(player.wins, player.totalGames || player.wins + 5, 0);
+                            return (
+                                <div key={player.odId} className="leaderboard-row">
+                                    <span className="rank">{getRankEmoji(index + 1)}</span>
+                                    <span className="player-avatar">{player.avatar}</span>
+                                    <span className="player-name">{player.name}</span>
+                                    <div className="player-trend">
+                                        <Sparkline data={trendData} width={50} height={18} />
+                                    </div>
+                                    <span className="player-wins">{player.wins} wins</span>
+                                </div>
+                            );
+                        })}
                     </div>
                 </section>
             </div>
