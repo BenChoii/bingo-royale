@@ -1,0 +1,786 @@
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { useNotification } from "../components/Notifications";
+import "./GameScreen.css";
+
+const PVP_POWERUPS = [
+    { type: "quickdaub", icon: "🎯", cost: 50, label: "Quick Daub", desc: "Daubs a random number on your card instantly." },
+    { type: "peek", icon: "👁️", cost: 60, label: "Peek", desc: "Instantly see the next ball before it's called." },
+    { type: "wild", icon: "🃏", cost: 100, label: "Wild", desc: "Automatically daubs two random numbers!" },
+    { type: "doublexp", icon: "✨", cost: 75, label: "2x XP", desc: "Doubles the XP earned from this game." },
+    { type: "freeze", icon: "🧊", cost: 120, label: "Freeze Ray", desc: "Freeze an opponent's card for 7 seconds!", needsTarget: true },
+    { type: "shuffle", icon: "🌀", cost: 100, label: "Chaos Scramble", desc: "Change one random undaubed number on an opponent's card!", needsTarget: true },
+    { type: "shield", icon: "🛡️", cost: 90, label: "Titan Shield", desc: "Protect yourself from attacks for 30 seconds!", needsTarget: false },
+];
+
+const getLetter = (num) => {
+    if (typeof num === "string") return "";
+    if (num <= 15) return "B";
+    if (num <= 30) return "I";
+    if (num <= 45) return "N";
+    if (num <= 60) return "G";
+    return "O";
+};
+
+function getRankEmoji(rank) {
+    switch (rank) {
+        case 1: return "🥇";
+        case 2: return "🥈";
+        case 3: return "🥉";
+        default: return `#${rank}`;
+    }
+}
+
+export default function GameScreen({ userId, roomId, onLeave }) {
+    const [message, setMessage] = useState("");
+    const [mobileTab, setMobileTab] = useState("race"); // 'race', 'powerups', 'chat'
+    const [showMobileOverlay, setShowMobileOverlay] = useState(false);
+    const [peekedNumber, setPeekedNumber] = useState(null);
+    const [cooldowns, setCooldowns] = useState({});
+    const [targeting, setTargeting] = useState(null); // { type, cost, label }
+    const [now, setNow] = useState(Date.now());
+    const [expandedPlayer, setExpandedPlayer] = useState(null); // For viewing opponent cards large
+    const { showNotification } = useNotification();
+    const celebrationTriggered = useRef(false);
+
+    const user = useQuery(api.users.getUser, { userId });
+    const roomDetails = useQuery(api.rooms.getRoomDetails, { roomId });
+    const gameState = useQuery(api.games.getGameState, { roomId });
+    const myCard = useQuery(api.games.getMyCard, { roomId, userId });
+    const messages = useQuery(api.chat.getMessages, { roomId });
+    const reactions = useQuery(api.chat.getReactions);
+
+    const isHost = roomDetails?.hostId === userId;
+    const isPlaying = roomDetails?.status === "playing";
+    const isFinished = roomDetails?.status === "finished";
+
+    const startGame = useMutation(api.games.startGame);
+    const claimBingo = useMutation(api.games.claimBingo);
+    const daubNumber = useMutation(api.games.daubNumber);
+    const usePowerup = useMutation(api.powerups.usePowerup);
+    const sendMessage = useMutation(api.chat.sendMessage);
+    const sendReaction = useMutation(api.chat.sendReaction);
+    const leaveRoom = useMutation(api.rooms.leaveRoom);
+    const joinBossBattle = useMutation(api.boss.joinBossBattle);
+    const startBossBattle = useMutation(api.boss.startBossBattle);
+    const daubBossNumber = useMutation(api.boss.daubBossNumber);
+    const bossCallNumber = useMutation(api.boss.bossCallNumber);
+    const claimDailyReward = useMutation(api.daily.claimDailyReward);
+
+    const activeBoss = useQuery(api.boss.getActiveBoss, { roomId });
+
+    const handleTopUp = async () => {
+        const result = await claimDailyReward({ userId });
+        if (result.success) {
+            showNotification(`Top-up successful! Received ${result.amount} Gems. 💎`, "success");
+        } else {
+            showNotification(result.error, "error");
+        }
+    };
+
+    const chatRef = useRef(null);
+
+    // Auto-scroll chat
+    useEffect(() => {
+        if (chatRef.current) {
+            chatRef.current.scrollTop = chatRef.current.scrollHeight;
+        }
+    }, [messages]);
+
+    // Show notifications for new system messages
+    const lastMessageCount = useRef(0);
+    useEffect(() => {
+        if (messages && messages.length > lastMessageCount.current) {
+            const newMessages = messages.slice(lastMessageCount.current);
+            newMessages.forEach(msg => {
+                if (msg.type === "system" && msg.userId !== userId) {
+                    showNotification(msg.content, "info");
+                }
+            });
+            lastMessageCount.current = messages.length;
+        } else if (messages) {
+            lastMessageCount.current = messages.length;
+        }
+    }, [messages, userId, showNotification]);
+
+    const handleStartGame = async () => {
+        if (!roomDetails) return;
+        await startGame({ roomId, hostId: userId });
+    };
+
+    const handleClaimBingo = async () => {
+        if (!gameState) return;
+        const result = await claimBingo({ gameId: gameState._id, userId });
+        if (!result.success) {
+            showNotification(result.error || "Not a valid bingo!", "error");
+        } else {
+            showNotification(`BINGO! You earned ${result.xpEarned} XP and ${result.coinsEarned} Gems!`, "success");
+            if (result.levelUp) {
+                showNotification("LEVEL UP!", "success");
+            }
+        }
+    };
+
+    const handleUsePowerup = async (type, targetId) => {
+        if (!gameState) return;
+
+        const poConfig = PVP_POWERUPS.find(p => p.type === type);
+        if (poConfig?.needsTarget && !targetId) {
+            setTargeting(poConfig);
+            showNotification(`Select a target for ${poConfig.label}!`, "info");
+            return;
+        }
+
+        try {
+            const result = await usePowerup({
+                gameId: gameState._id,
+                userId,
+                type,
+                targetUserId: targetId
+            });
+            if (result.success) {
+                setTargeting(null);
+                if (type === "peek" && result.peekedNumber) {
+                    setPeekedNumber(result.peekedNumber);
+                    showNotification(`The next ball is ${result.peekedNumber}!`, "info");
+                } else {
+                    showNotification(`Power-up activated!`, "info");
+                }
+            } else {
+                setTargeting(null);
+                showNotification(result.error || "Failed to use power-up", "error");
+            }
+        } catch (error) {
+            setTargeting(null);
+            console.error("Failed to use power-up:", error);
+        }
+    };
+
+
+    // Reset peek when a new ball is called
+    useEffect(() => {
+        setPeekedNumber(null);
+    }, [gameState?.currentNumber]);
+
+    // Power-up cooldowns
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const now = Date.now();
+            const newCooldowns = {};
+
+            gameState?.powerupHistory?.forEach(p => {
+                if (p.sourceUserId === userId) {
+                    const timeSince = now - p.usedAt;
+                    const remaining = Math.max(0, Math.ceil((60000 - timeSince) / 1000));
+                    if (remaining > 0) {
+                        if (!newCooldowns[p.type] || remaining > newCooldowns[p.type]) {
+                            newCooldowns[p.type] = remaining;
+                        }
+                    }
+                }
+            });
+            setCooldowns(newCooldowns);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [gameState?.powerupHistory, userId]);
+
+    // Global timer pulse
+    useEffect(() => {
+        const interval = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleSendMessage = async (e) => {
+        e.preventDefault();
+        if (!message.trim()) return;
+        await sendMessage({ roomId, userId, content: message.trim() });
+        setMessage("");
+    };
+
+    const handleReaction = async (reaction) => {
+        await sendReaction({ roomId, userId, reaction });
+    };
+
+    const handleLeave = async () => {
+        await leaveRoom({ roomId, userId });
+        onLeave();
+    };
+
+    const handleJoinBoss = async (level) => {
+        const result = await joinBossBattle({ userId, roomId, bossLevel: level });
+        if (result.success) {
+            showNotification(`Ready for battle! Wager placed. ⚔️`, "success");
+        } else {
+            showNotification(result.error, "error");
+        }
+    };
+
+    const handleStartBossAction = async () => {
+        const result = await startBossBattle({ roomId });
+        if (!result.success) {
+            showNotification(result.error, "error");
+        }
+    };
+
+    // Host handles boss number calls
+    useEffect(() => {
+        if (!isHost || activeBoss?.status !== "active") return;
+
+        const interval = setInterval(() => {
+            bossCallNumber({ roomId });
+        }, 1500); // Hyper speed calling
+
+        return () => clearInterval(interval);
+    }, [isHost, activeBoss?.status, roomId]);
+
+    const handleCellClick = async (num) => {
+        if (num === "FREE") return; // Can't click free space
+
+        // Boss battle mode
+        if (activeBoss?.status === "active") {
+            await daubBossNumber({ roomId, userId, number: num });
+            return;
+        }
+
+        // Regular game mode
+        if (isPlaying && gameState?._id) {
+            await daubNumber({ gameId: gameState._id, userId, number: num });
+        }
+    };
+
+
+
+    return (
+        <div className="game-screen">
+            {/* Header */}
+            <header className="game-header">
+                <button className="btn-back" onClick={handleLeave}>← Leave</button>
+                <div className="room-info-header">
+                    <span className="room-code">{roomDetails?.code}</span>
+                    <span className="room-name-small">{roomDetails?.name}</span>
+                </div>
+                <div className="player-count">
+                    👥 {roomDetails?.players?.length || 0}
+                </div>
+            </header>
+
+            <div className="game-layout">
+                {/* Left: Race Tracker + Players + Power-ups */}
+                <aside className="game-sidebar">
+                    <div className="race-tracker">
+                        <h3>🏁 Race to Bingo</h3>
+                        <div className="race-list">
+                            {gameState?.players?.map((player, index) => {
+                                const isFrozen = player.frozenUntil && player.frozenUntil > Date.now();
+                                const isShielded = player.shieldUntil && player.shieldUntil > Date.now();
+                                const isRecentlyScrambled = player.scrambledAt && (Date.now() - player.scrambledAt < 3000);
+
+                                return (
+                                    <div
+                                        key={player.odId}
+                                        className={`race-row ${player.odId === userId ? "is-me" : ""} ${targeting ? "clickable-target" : ""} ${isRecentlyScrambled ? "victim-scramble" : ""}`}
+                                        onClick={() => targeting && player.odId !== userId && handleUsePowerup(targeting.type, player.odId)}
+                                    >
+                                        <span className="race-rank">{getRankEmoji(index + 1)}</span>
+                                        <div className="avatar-wrapper">
+                                            <span className="race-avatar">{player.avatar}</span>
+                                            {isFrozen && <span className="status-mini-icon">🧊</span>}
+                                            {isShielded && <span className="status-mini-icon">🛡️</span>}
+                                            {isRecentlyScrambled && <span className="status-mini-icon scramble-pulse">🌀</span>}
+                                        </div>
+                                        <span className="race-name">{player.name}</span>
+                                        <div className="race-visual">
+                                            <div
+                                                className="mini-card-grid clickable"
+                                                onClick={() => setExpandedPlayer(player)}
+                                                title="Click to view full card"
+                                            >
+                                                {player.card?.map((row, rIdx) => (
+                                                    row.map((cell, cIdx) => (
+                                                        <div
+                                                            key={`${rIdx}-${cIdx}`}
+                                                            className={`mini-cell ${cell.daubed ? 'daubed' : ''} ${cell.value === 'FREE' ? 'is-free' : ''}`}
+                                                        >
+                                                            {cell.value === 'FREE' ? '⭐' : cell.value}
+                                                        </div>
+                                                    ))
+                                                ))}
+                                                <div className="expand-hint">🔍</div>
+                                            </div>
+                                            <div className="race-stats">
+                                                <div className="race-progress">
+                                                    <div
+                                                        className="race-bar"
+                                                        style={{ width: `${((5 - player.distanceToBingo) / 5) * 100}%` }}
+                                                    />
+                                                </div>
+                                                <span className="race-distance">{player.distanceToBingo} away</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="powerups-panel">
+                        <h3>⚡ Power-ups</h3>
+                        <div className="powerups-grid">
+                            {PVP_POWERUPS.map((po) => {
+                                const cooldown = cooldowns[po.type];
+                                return (
+                                    <button
+                                        key={po.type}
+                                        className={`powerup-btn ${cooldown ? 'on-cooldown' : ''} ${targeting?.type === po.type ? 'active-targeting' : ''}`}
+                                        onClick={() => handleUsePowerup(po.type)}
+                                        disabled={!isPlaying || (user?.coins || 0) < po.cost || !!cooldown}
+                                        title={`${po.label}: ${po.desc} (${po.cost} Gems)${cooldown ? ` - ${cooldown}s left` : ''}`}
+                                    >
+                                        <span className="p-icon">{po.icon}</span>
+                                        <span className="p-label text-[0.6rem] font-bold leading-tight">{po.label}</span>
+                                        <span className="p-cost">{po.cost}</span>
+                                        {cooldown > 0 && (
+                                            <div className="cooldown-overlay">{cooldown}s</div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <div className="user-gems">
+                            💎 {user?.coins || 0} Gems
+                        </div>
+                        {targeting && (
+                            <button className="cancel-targeting" onClick={() => setTargeting(null)}>
+                                Cancel {targeting.label}
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Chat */}
+                    <div className="chat-panel">
+                        <h3>💬 Chat</h3>
+                        <div className="chat-messages" ref={chatRef}>
+                            {messages?.map((msg) => (
+                                <div
+                                    key={msg._id}
+                                    className={`chat-msg ${msg.type} ${msg.userId === userId ? "is-me" : ""}`}
+                                >
+                                    {msg.type !== "system" && (
+                                        <span className="msg-avatar">{msg.userAvatar}</span>
+                                    )}
+                                    <div className="msg-content">
+                                        {msg.type !== "system" && (
+                                            <span className="msg-name">{msg.userName}</span>
+                                        )}
+                                        <span className="msg-text">{msg.content}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="chat-reactions">
+                            {reactions?.map((r) => (
+                                <button key={r} className="reaction-btn" onClick={() => handleReaction(r)}>
+                                    {r}
+                                </button>
+                            ))}
+                        </div>
+                        <form className="chat-input" onSubmit={handleSendMessage}>
+                            <input
+                                type="text"
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                placeholder="Say something..."
+                                maxLength={200}
+                            />
+                            <button type="submit">Send</button>
+                        </form>
+                    </div>
+                </aside>
+
+                {/* Mobile Bottom Navigation */}
+                <div className="mobile-nav">
+                    <button
+                        className={`mobile-nav-btn ${mobileTab === 'race' ? 'active' : ''}`}
+                        onClick={() => { setMobileTab('race'); setShowMobileOverlay(true); }}
+                    >
+                        <span className="nav-icon">🏁</span>
+                        <span className="nav-label">Race</span>
+                    </button>
+                    <button
+                        className={`mobile-nav-btn ${mobileTab === 'powerups' ? 'active' : ''}`}
+                        onClick={() => { setMobileTab('powerups'); setShowMobileOverlay(true); }}
+                    >
+                        <span className="nav-icon">⚡</span>
+                        <span className="nav-label">Power-ups</span>
+                    </button>
+                    <button
+                        className={`mobile-nav-btn ${mobileTab === 'chat' ? 'active' : ''}`}
+                        onClick={() => { setMobileTab('chat'); setShowMobileOverlay(true); }}
+                    >
+                        <span className="nav-icon">💬</span>
+                        <span className="nav-label">Chat</span>
+                    </button>
+                </div>
+
+                {/* Mobile Overlay */}
+                {showMobileOverlay && (
+                    <div className="mobile-overlay" onClick={() => setShowMobileOverlay(false)}>
+                        <div className="mobile-overlay-content" onClick={(e) => e.stopPropagation()}>
+                            <div className="mobile-overlay-header">
+                                <h3>{mobileTab === 'race' ? '🏁 Race' : mobileTab === 'powerups' ? '⚡ Power-ups' : '💬 Chat'}</h3>
+                                <button className="close-btn" onClick={() => setShowMobileOverlay(false)}>✕</button>
+                            </div>
+                            <div className="mobile-overlay-body">
+                                {mobileTab === 'race' && (
+                                    <div className="race-list">
+                                        {gameState?.players?.map((player, index) => (
+                                            <div
+                                                key={player.odId}
+                                                className={`race-row ${player.odId === userId ? 'is-me' : ''}`}
+                                            >
+                                                <span className="race-rank">{getRankEmoji(index + 1)}</span>
+                                                <span className="race-avatar">{player.avatar}</span>
+                                                <span className="race-name">{player.name}</span>
+                                                <div className="race-visual">
+                                                    <div className="mini-card-grid">
+                                                        {player.card?.map((row, rIdx) => (
+                                                            row.map((cell, cIdx) => (
+                                                                <div
+                                                                    key={`${rIdx}-${cIdx}`}
+                                                                    className={`mini-cell ${cell.daubed ? 'daubed' : ''} ${cell.value === 'FREE' ? 'is-free' : ''}`}
+                                                                >
+                                                                    {cell.value === 'FREE' ? '⭐' : cell.value}
+                                                                </div>
+                                                            ))
+                                                        ))}
+                                                    </div>
+                                                    <div className="race-stats">
+                                                        <div className="race-progress">
+                                                            <div
+                                                                className="race-bar"
+                                                                style={{ width: `${((5 - player.distanceToBingo) / 5) * 100}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className="race-distance">{player.distanceToBingo} away</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {mobileTab === 'powerups' && (
+                                    <>
+                                        <div className="powerups-grid">
+                                            {PVP_POWERUPS.map((po) => {
+                                                const cooldown = cooldowns[po.type];
+                                                return (
+                                                    <button
+                                                        key={po.type}
+                                                        className={`powerup-btn ${cooldown ? 'on-cooldown' : ''} ${targeting?.type === po.type ? 'active-targeting' : ''}`}
+                                                        onClick={() => handleUsePowerup(po.type)}
+                                                        disabled={!isPlaying || (user?.coins || 0) < po.cost || !!cooldown}
+                                                        title={`${po.label}: ${po.desc} (${po.cost} Gems)${cooldown ? ` - ${cooldown}s left` : ''}`}
+                                                    >
+                                                        <span className="p-icon">{po.icon}</span>
+                                                        <div className="p-info-mobile">
+                                                            <span className="p-label">{po.label}</span>
+                                                            <span className="p-desc-mobile">{po.desc}</span>
+                                                        </div>
+                                                        <span className="p-cost">{po.cost} 💎</span>
+                                                        {cooldown > 0 && (
+                                                            <div className="cooldown-overlay">{cooldown}s</div>
+                                                        )}
+                                                    </button>
+                                                )
+                                            })}
+                                            {user?.coins < 100 && (
+                                                <button className="topup-btn pulse-anim" onClick={handleTopUp}>
+                                                    🆘 Emergency Top-up
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="user-bank-mobile">
+                                            Your Balance: 💎 {user?.coins || 0} Gems
+                                        </div>
+                                        {targeting && (
+                                            <button className="cancel-targeting-mobile" onClick={() => { setTargeting(null); setShowMobileOverlay(false); }}>
+                                                Cancel {targeting.label} (Select Target in Race)
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+                                {mobileTab === 'chat' && (
+                                    <>
+                                        <div className="chat-messages" ref={chatRef}>
+                                            {messages?.map((msg) => (
+                                                <div
+                                                    key={msg._id}
+                                                    className={`chat-msg ${msg.type} ${msg.userId === userId ? 'is-me' : ''}`}
+                                                >
+                                                    {msg.type !== 'system' && (
+                                                        <span className="msg-avatar">{msg.userAvatar}</span>
+                                                    )}
+                                                    <div className="msg-content">
+                                                        {msg.type !== 'system' && (
+                                                            <span className="msg-name">{msg.userName}</span>
+                                                        )}
+                                                        <span className="msg-text">{msg.content}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="chat-reactions">
+                                            {reactions?.map((r) => (
+                                                <button key={r} className="reaction-btn" onClick={() => handleReaction(r)}>
+                                                    {r}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <form className="chat-input" onSubmit={handleSendMessage}>
+                                            <input
+                                                type="text"
+                                                value={message}
+                                                onChange={(e) => setMessage(e.target.value)}
+                                                placeholder="Say something..."
+                                                maxLength={200}
+                                            />
+                                            <button type="submit">Send</button>
+                                        </form>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Center: Game Area */}
+                <main className="game-main">
+                    {/* Number Caller */}
+                    <div className="caller-display">
+                        {isPlaying && gameState?.currentNumber ? (
+                            <>
+                                <div className="current-number">
+                                    <span className="number-letter">{getLetter(gameState.currentNumber)}</span>
+                                    <span className="number-value">{gameState.currentNumber}</span>
+                                </div>
+                                <div className="called-history">
+                                    {(gameState.calledNumbers || []).slice(-10).reverse().map((num, i) => (
+                                        <span key={i} className="called-num">{num}</span>
+                                    ))}
+                                </div>
+                            </>
+                        ) : activeBoss?.status === "active" ? (
+                            <div className="boss-battle-stats">
+                                <div className="boss-health-container">
+                                    <div className="boss-name-tag">👹 BOSS HP: {activeBoss.health}/{activeBoss.maxHealth}</div>
+                                    <div className="boss-timer">
+                                        ⏳ {Math.max(0, Math.ceil((activeBoss.expiresAt - now) / 1000))}s REMAINING
+                                    </div>
+                                    <div className="boss-hp-bar">
+                                        <div
+                                            className="boss-hp-fill"
+                                            style={{ width: `${(activeBoss.health / activeBoss.maxHealth) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="boss-numbers-active">
+                                    {(activeBoss.calledNumbers || []).slice(-10).reverse().map((num, i) => (
+                                        <span key={i} className="boss-num animate-pop">{num}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="waiting-display">
+                                {isFinished ? (
+                                    <div className="game-over-header">
+                                        <div className="winner-display">
+                                            <span className="winner-emoji">🏆</span>
+                                            <span className="winner-text">
+                                                {gameState?.winner?.name || "Someone"} WON THE TOURNAMENT!
+                                            </span>
+                                        </div>
+                                        {(!activeBoss || activeBoss?.status === "preparing") && (
+                                            <div className="boss-intro">
+                                                <h3>🔥 BOSS CHALLENGE PHASE 🔥</h3>
+                                                <p>Wager together to defeat the titan!</p>
+                                            </div>
+                                        )}
+                                        {activeBoss?.status === "won" && (
+                                            <div className="boss-victory">
+                                                <span className="v-icon">✨</span>
+                                                <span className="v-text">BOSS DEFEATED!</span>
+                                            </div>
+                                        )}
+                                        {activeBoss?.status === "lost" && (
+                                            <div className="boss-defeat">
+                                                <span className="v-icon">💀</span>
+                                                <span className="v-text">THE BOSS ESCAPED...</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <span>Waiting to start...</span>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Bingo Card */}
+                    <div className="bingo-card-wrapper">
+                        <div className="card-header">
+                            <span style={{ background: "#3498db" }}>B</span>
+                            <span style={{ background: "#2ecc71" }}>I</span>
+                            <span style={{ background: "#9b59b6" }}>N</span>
+                            <span style={{ background: "#e67e22" }}>G</span>
+                            <span style={{ background: "#e74c3c" }}>O</span>
+                        </div>
+                        <div className="bingo-card">
+                            {gameState?.players?.find(p => p.odId === userId)?.frozenUntil > Date.now() && (
+                                <div className="freeze-overlay anim-shimmer">
+                                    <span className="freeze-icon">🧊</span>
+                                    <span className="freeze-text">FROZEN!</span>
+                                </div>
+                            )}
+                            {gameState?.players?.find(p => p.odId === userId)?.scrambledAt > Date.now() - 3000 && (
+                                <div className="scramble-overlay glitch-shiver">
+                                    <span className="scramble-icon">🌀</span>
+                                    <span className="scramble-text">RE-SHUFFLED!</span>
+                                </div>
+                            )}
+                            {myCard?.map((row, rowIndex) =>
+                                row.map((cell, colIndex) => {
+                                    const isCalled = activeBoss?.status === "active"
+                                        ? (activeBoss.calledNumbers || []).includes(cell.value)
+                                        : (gameState?.calledNumbers || []).includes(cell.value);
+                                    const isPeeked = cell.value === peekedNumber;
+                                    return (
+                                        <div
+                                            key={`${rowIndex}-${colIndex}`}
+                                            className={`bingo-cell ${isCalled ? "called" : ""} ${cell.daubed ? "daubed" : ""
+                                                } ${cell.value === "FREE" ? "free-space" : ""} ${isPeeked ? "peeked-highlight" : ""}`}
+                                            onClick={() => isCalled && handleCellClick(cell.value)}
+                                            style={{ cursor: isCalled && !cell.daubed ? "pointer" : "default" }}
+                                        >
+                                            {cell.value === "FREE" ? "⭐" : cell.value}
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Game Controls */}
+                    <div className="game-controls">
+                        {!isPlaying && !isFinished && isHost && (
+                            <button className="btn btn-primary btn-large" onClick={handleStartGame}>
+                                ▶️ Start Game
+                            </button>
+                        )}
+                        {!isPlaying && !isFinished && !isHost && (
+                            <div className="waiting-message">Waiting for host to start...</div>
+                        )}
+                        {isPlaying && (
+                            <button className="btn btn-accent btn-large" onClick={handleClaimBingo}>
+                                🎉 BINGO!
+                            </button>
+                        )}
+                        {isFinished && (!activeBoss || activeBoss?.status === "preparing") && (
+                            <div className="boss-battle-selection">
+                                {[
+                                    { level: 1, icon: "👹", name: "Slime King", wager: 100, prize: 300 },
+                                    { level: 2, icon: "🗿", name: "Giga Golem", wager: 250, prize: 875 },
+                                    { level: 3, icon: "🐲", name: "Fire Drake", wager: 500, prize: 2000 },
+                                    { level: 4, icon: "🌑", name: "Void Titan", wager: 2500, prize: 12500 },
+                                ].map(boss => {
+                                    const isJoined = activeBoss?.participants?.includes(userId);
+                                    return (
+                                        <button
+                                            key={boss.level}
+                                            className={`boss-btn ${isJoined ? 'is-joined' : ''}`}
+                                            onClick={() => !isJoined && handleJoinBoss(boss.level)}
+                                            disabled={(user?.coins || 0) < boss.wager && !isJoined}
+                                        >
+                                            <span className="boss-icon">{boss.icon}</span>
+                                            <span className="boss-name">{boss.name}</span>
+                                            <span className="boss-wager">{isJoined ? 'READY! ✅' : `Wager: ${boss.wager} 💎`}</span>
+                                            <span className="boss-reward">Win {boss.prize}+!</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                        {isFinished && activeBoss?.status === "preparing" && isHost && (
+                            <button className="btn btn-accent btn-large animate-pulse" onClick={handleStartBossAction}>
+                                ⚔️ START BOSS RAID
+                            </button>
+                        )}
+                        {isFinished && isHost && (
+                            <button className="btn btn-primary btn-large btn-replay" onClick={handleStartGame}>
+                                🔄 Start New Tournament
+                            </button>
+                        )}
+                    </div>
+                </main>
+
+                {/* Floating BINGO Button (Mobile) */}
+                {isPlaying && (
+                    <button className="floating-bingo-btn" onClick={handleClaimBingo}>
+                        <span className="fab-icon">🎉</span>
+                        <span className="fab-text">BINGO!</span>
+                    </button>
+                )}
+
+                {/* Expanded Player Card Modal */}
+                <AnimatePresence>
+                    {expandedPlayer && (
+                        <motion.div
+                            className="expanded-card-overlay"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setExpandedPlayer(null)}
+                        >
+                            <motion.div
+                                className="expanded-card-modal"
+                                initial={{ scale: 0.8, y: 50 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.8, y: 50 }}
+                                transition={{ type: "spring", damping: 25 }}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="expanded-card-header">
+                                    <span className="expanded-avatar">{expandedPlayer.avatar}</span>
+                                    <span className="expanded-name">{expandedPlayer.name}</span>
+                                    <span className="expanded-distance">{expandedPlayer.distanceToBingo} to bingo</span>
+                                    <button className="close-expanded" onClick={() => setExpandedPlayer(null)}>✕</button>
+                                </div>
+                                <div className="expanded-card-grid">
+                                    <div className="expanded-header-row">
+                                        {['B', 'I', 'N', 'G', 'O'].map((letter) => (
+                                            <div key={letter} className="expanded-header-cell">{letter}</div>
+                                        ))}
+                                    </div>
+                                    {expandedPlayer.card?.map((row, rIdx) => (
+                                        <div key={rIdx} className="expanded-row">
+                                            {row.map((cell, cIdx) => (
+                                                <div
+                                                    key={`${rIdx}-${cIdx}`}
+                                                    className={`expanded-cell ${cell.daubed ? 'daubed' : ''} ${cell.value === 'FREE' ? 'is-free' : ''}`}
+                                                >
+                                                    {cell.value === 'FREE' ? '⭐' : cell.value}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        </div>
+    );
+}
+

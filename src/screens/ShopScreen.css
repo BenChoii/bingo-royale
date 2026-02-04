@@ -1,0 +1,326 @@
+.shop-overlay {
+    position: fixed;
+    inset: 0;
+    background: hsla(240, 25%, 5%, 0.9);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.shop-modal {
+    background: linear-gradient(180deg, hsl(240, 25%, 12%) 0%, hsl(260, 30%, 8%) 100%);
+    border: 1px solid hsla(275, 60%, 50%, 0.3);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px hsla(275, 60%, 30%, 0.4);
+}
+
+.shop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid hsla(275, 60%, 50%, 0.15);
+}
+
+.shop-header h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, hsl(45, 100%, 60%) 0%, hsl(35, 100%, 50%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.close-btn {
+    background: hsla(0, 0%, 100%, 0.1);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background: hsla(0, 70%, 50%, 0.5);
+    transform: rotate(90deg);
+}
+
+.shop-tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid hsla(275, 60%, 50%, 0.1);
+}
+
+.shop-tabs .tab {
+    flex: 1;
+    padding: 0.75rem;
+    background: hsla(240, 20%, 15%, 0.5);
+    border: 1px solid hsla(275, 60%, 50%, 0.1);
+    border-radius: 12px;
+    color: hsla(0, 0%, 100%, 0.7);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.shop-tabs .tab.active {
+    background: linear-gradient(135deg, hsla(275, 60%, 50%, 0.3) 0%, hsla(320, 60%, 40%, 0.3) 100%);
+    border-color: hsl(275, 60%, 50%);
+    color: white;
+}
+
+.shop-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.tab-content h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: hsla(0, 0%, 100%, 0.9);
+}
+
+/* Daily Section */
+.daily-section {
+    background: linear-gradient(135deg, hsla(45, 100%, 50%, 0.1) 0%, hsla(35, 100%, 40%, 0.05) 100%);
+    border: 1px solid hsla(45, 100%, 50%, 0.2);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.streak-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.streak-info .best {
+    color: hsla(0, 0%, 100%, 0.5);
+}
+
+.claim-btn {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, hsl(45, 100%, 50%) 0%, hsl(35, 100%, 45%) 100%);
+    border: none;
+    border-radius: 12px;
+    color: hsl(240, 20%, 10%);
+    font-weight: 800;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px hsla(45, 100%, 50%, 0.4);
+}
+
+.cooldown {
+    text-align: center;
+    padding: 1rem;
+    color: hsla(0, 0%, 100%, 0.5);
+    font-size: 0.9rem;
+}
+
+/* Gem Packages */
+.gem-packages {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.gem-package {
+    background: hsla(240, 20%, 15%, 0.5);
+    border: 1px solid hsla(275, 60%, 50%, 0.1);
+    border-radius: 16px;
+    padding: 1.25rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.gem-package.popular {
+    border-color: hsl(275, 80%, 55%);
+    background: linear-gradient(180deg, hsla(275, 60%, 30%, 0.2) 0%, hsla(240, 20%, 15%, 0.5) 100%);
+}
+
+.popular-tag {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: linear-gradient(135deg, hsl(275, 80%, 55%) 0%, hsl(320, 70%, 50%) 100%);
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pkg-gems {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+}
+
+.pkg-bonus {
+    font-size: 0.8rem;
+    color: hsl(120, 70%, 60%);
+    margin-bottom: 0.75rem;
+}
+
+.pkg-buy {
+    width: 100%;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, hsl(275, 80%, 55%) 0%, hsl(320, 70%, 50%) 100%);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Lucky Line */
+.lucky-tab {
+    text-align: center;
+}
+
+.lucky-header p {
+    color: hsla(0, 0%, 100%, 0.6);
+    margin-bottom: 1.5rem;
+}
+
+.lucky-info {
+    background: hsla(240, 20%, 15%, 0.5);
+    border-radius: 16px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid hsla(275, 60%, 50%, 0.1);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-row.jackpot {
+    color: hsl(45, 100%, 60%);
+    font-weight: 700;
+}
+
+.lucky-start-btn {
+    width: 100%;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, hsl(120, 60%, 45%) 0%, hsl(100, 60%, 35%) 100%);
+    border: none;
+    border-radius: 16px;
+    color: white;
+    font-weight: 800;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px hsla(120, 60%, 45%, 0.4);
+}
+
+.lucky-active {
+    background: hsla(45, 100%, 50%, 0.1);
+    border: 1px solid hsla(45, 100%, 50%, 0.3);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+/* Cosmetics */
+.cosmetic-category {
+    margin-bottom: 1.5rem;
+}
+
+.cosmetic-category h4 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    color: hsla(0, 0%, 100%, 0.8);
+}
+
+.cosmetic-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+}
+
+.cosmetic-item {
+    background: hsla(240, 20%, 15%, 0.5);
+    border: 1px solid hsla(275, 60%, 50%, 0.1);
+    border-radius: 12px;
+    padding: 0.75rem;
+    text-align: center;
+}
+
+.cosmetic-item.common {
+    border-color: hsla(0, 0%, 70%, 0.3);
+}
+
+.cosmetic-item.rare {
+    border-color: hsla(210, 100%, 60%, 0.4);
+}
+
+.cosmetic-item.epic {
+    border-color: hsla(275, 80%, 60%, 0.5);
+}
+
+.cosmetic-item.legendary {
+    border-color: hsla(45, 100%, 55%, 0.6);
+}
+
+.cosmetic-item.owned {
+    background: hsla(120, 60%, 30%, 0.2);
+}
+
+.cosmetic-preview {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    line-height: 1;
+}
+
+.cosmetic-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.cosmetic-price .buy-btn,
+.cosmetic-price .equip-btn {
+    width: 100%;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.buy-btn {
+    background: linear-gradient(135deg, hsl(275, 80%, 55%) 0%, hsl(320, 70%, 50%) 100%);
+    color: white;
+}
+
+.equip-btn {
+    background: hsl(120, 60%, 40%);
+    color: white;
+}

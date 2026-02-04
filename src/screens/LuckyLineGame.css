@@ -1,0 +1,231 @@
+.lucky-game-overlay {
+    position: fixed;
+    inset: 0;
+    background: hsla(240, 25%, 5%, 0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.lucky-game-modal {
+    background: linear-gradient(180deg, hsl(240, 25%, 12%) 0%, hsl(260, 30%, 8%) 100%);
+    border: 1px solid hsla(275, 60%, 50%, 0.3);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 450px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px hsla(275, 60%, 30%, 0.5);
+}
+
+.lucky-game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid hsla(275, 60%, 50%, 0.15);
+}
+
+.lucky-game-header h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.lucky-game-content {
+    padding: 1.5rem;
+}
+
+.instruction {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: hsla(0, 0%, 100%, 0.7);
+}
+
+.lines-selector {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.line-btn {
+    padding: 0.75rem 0.5rem;
+    background: hsla(240, 20%, 15%, 0.5);
+    border: 1px solid hsla(275, 60%, 50%, 0.2);
+    border-radius: 10px;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.line-btn:hover {
+    border-color: hsl(275, 60%, 50%);
+    background: hsla(275, 60%, 50%, 0.2);
+}
+
+.line-btn.selected {
+    background: linear-gradient(135deg, hsla(120, 60%, 40%, 0.4) 0%, hsla(100, 60%, 30%, 0.4) 100%);
+    border-color: hsl(120, 60%, 50%);
+}
+
+.pick-num {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: hsl(120, 60%, 45%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 0.65rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.selected-lines {
+    background: hsla(240, 20%, 15%, 0.3);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.selected-lines h4 {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+    color: hsla(0, 0%, 100%, 0.8);
+}
+
+.empty {
+    color: hsla(0, 0%, 100%, 0.4);
+    font-size: 0.85rem;
+}
+
+.picks-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.pick {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.4rem 0.75rem;
+    background: hsla(240, 20%, 20%, 0.5);
+    border-radius: 8px;
+    font-size: 0.8rem;
+}
+
+.pick.jackpot {
+    background: linear-gradient(135deg, hsla(45, 100%, 50%, 0.3) 0%, hsla(35, 100%, 40%, 0.3) 100%);
+    border: 1px solid hsla(45, 100%, 50%, 0.4);
+}
+
+.jackpot-tag {
+    font-size: 0.9rem;
+}
+
+.reveal-btn {
+    width: 100%;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, hsl(45, 100%, 50%) 0%, hsl(35, 100%, 45%) 100%);
+    border: none;
+    border-radius: 16px;
+    color: hsl(240, 20%, 10%);
+    font-weight: 800;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px hsla(45, 100%, 50%, 0.4);
+}
+
+.reveal-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Revealing */
+.revealing {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.ball-counter {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+/* Result */
+.result {
+    text-align: center;
+    padding: 2rem;
+}
+
+.result-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+}
+
+.result h3 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.result.jackpot {
+    background: linear-gradient(180deg, hsla(45, 100%, 50%, 0.2) 0%, transparent 100%);
+}
+
+.result.jackpot h3 {
+    background: linear-gradient(135deg, hsl(45, 100%, 60%) 0%, hsl(35, 100%, 50%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.result.win h3 {
+    color: hsl(120, 60%, 60%);
+}
+
+.result.loss h3 {
+    color: hsla(0, 0%, 100%, 0.5);
+}
+
+.reward {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.result.jackpot .reward {
+    color: hsl(45, 100%, 60%);
+}
+
+.result.win .reward {
+    color: hsl(120, 60%, 60%);
+}
+
+.result-details {
+    margin-bottom: 1.5rem;
+    color: hsla(0, 0%, 100%, 0.6);
+    font-size: 0.9rem;
+}
+
+.close-result-btn {
+    padding: 1rem 2rem;
+    background: hsla(240, 20%, 20%, 0.5);
+    border: 1px solid hsla(275, 60%, 50%, 0.3);
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.loading {
+    color: hsla(0, 0%, 100%, 0.6);
+    font-size: 1.1rem;
+}

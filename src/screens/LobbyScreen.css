@@ -1,0 +1,590 @@
+.lobby-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, hsl(240, 25%, 8%) 0%, hsl(280, 30%, 10%) 50%, hsl(240, 25%, 6%) 100%);
+    color: white;
+}
+
+.lobby-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: hsla(240, 20%, 10%, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid hsla(255, 50%, 70%, 0.1);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logo span {
+    font-size: 1.5rem;
+}
+
+.logo h1 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin: 0;
+    background: linear-gradient(135deg, white 0%, hsl(275, 80%, 60%) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar {
+    font-size: 1.75rem;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 150px;
+}
+
+.user-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: white;
+}
+
+.user-level {
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    background: linear-gradient(135deg, hsl(45, 100%, 50%), hsl(35, 90%, 55%));
+    color: hsl(240, 20%, 10%);
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.xp-bar-container {
+    width: 100%;
+    height: 6px;
+    background: hsla(240, 10%, 20%, 0.8);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+.xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, hsl(275, 80%, 60%), hsl(320, 70%, 50%));
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.xp-text {
+    position: absolute;
+    right: 0;
+    top: -12px;
+    font-size: 0.65rem;
+    color: hsl(240, 10%, 60%);
+    font-weight: 600;
+}
+
+.currency-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.user-coins {
+    color: hsl(45, 100%, 60%);
+}
+
+.user-streak {
+    color: hsl(15, 90%, 60%);
+}
+
+.claim-reward-btn {
+    padding: 4px 10px;
+    background: linear-gradient(135deg, hsl(45, 100%, 50%), hsl(35, 90%, 55%));
+    color: hsl(240, 20%, 10%);
+    border: none;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 0 15px hsla(45, 100%, 50%, 0.3);
+}
+
+.anim-bounce {
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-5px);
+    }
+
+    60% {
+        transform: translateY(-3px);
+    }
+}
+
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.25rem;
+    background: hsla(240, 15%, 20%, 0.8);
+    border: 1px solid hsla(255, 50%, 70%, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background: hsla(240, 15%, 25%, 0.9);
+    border-color: hsl(0, 70%, 55%);
+}
+
+.lobby-content {
+    flex: 1;
+    padding: 1.5rem;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.join-code-box {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.code-input {
+    flex: 1;
+    padding: 1rem;
+    font-size: 1.25rem;
+    font-family: monospace;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-align: center;
+    text-transform: uppercase;
+    background: hsla(240, 15%, 18%, 0.9);
+    border: 2px solid hsla(255, 50%, 70%, 0.15);
+    border-radius: 12px;
+    color: white;
+    outline: none;
+}
+
+.code-input::placeholder {
+    letter-spacing: 0;
+    font-size: 0.9rem;
+}
+
+.code-input:focus {
+    border-color: hsl(275, 80%, 55%);
+}
+
+.btn-accent {
+    background: linear-gradient(135deg, hsl(45, 100%, 50%) 0%, hsl(35, 90%, 55%) 100%);
+    color: hsl(240, 20%, 10%);
+    font-weight: 700;
+}
+
+.btn-accent:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px hsla(45, 100%, 50%, 0.4);
+}
+
+/* Rooms Section */
+.rooms-section h2,
+.leaderboard-section h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: hsl(240, 10%, 80%);
+}
+
+.rooms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    color: hsl(240, 10%, 50%);
+}
+
+.empty-state .hint {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.room-card {
+    padding: 1.25rem;
+    background: hsla(240, 15%, 15%, 0.8);
+    border: 1px solid hsla(255, 50%, 70%, 0.1);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.room-card:hover {
+    border-color: hsl(275, 80%, 55%);
+    transform: translateY(-2px);
+}
+
+.room-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.room-header-top {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.room-mode {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.room-card.playing {
+    border-color: hsla(275, 80%, 55%, 0.4);
+}
+
+.status-badge {
+    font-size: 0.55rem;
+    font-weight: 900;
+    padding: 1px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.status-badge.playing {
+    background: hsla(145, 70%, 50%, 0.15);
+    color: hsl(145, 70%, 60%);
+    border: 1px solid hsla(145, 70%, 50%, 0.3);
+}
+
+.room-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    color: white;
+    word-break: break-word;
+}
+
+.room-info {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+    color: hsl(240, 10%, 60%);
+}
+
+.btn-secondary {
+    background: hsla(240, 15%, 20%, 0.9);
+    color: white;
+    border: 1px solid hsla(255, 50%, 70%, 0.15);
+}
+
+.btn-secondary:hover {
+    background: hsla(240, 15%, 25%, 0.95);
+    border-color: hsl(275, 80%, 55%);
+}
+
+/* Leaderboard */
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.leaderboard-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: hsla(240, 15%, 15%, 0.6);
+    border-radius: 12px;
+}
+
+.rank {
+    font-size: 1rem;
+    min-width: 30px;
+}
+
+.player-avatar {
+    font-size: 1.25rem;
+}
+
+.player-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.player-wins {
+    font-size: 0.85rem;
+    color: hsl(145, 70%, 50%);
+    font-weight: 600;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 1000;
+}
+
+.modal {
+    width: 100%;
+    max-width: 420px;
+    padding: 1.5rem;
+    background: hsla(240, 20%, 12%, 0.98);
+    border: 1px solid hsla(255, 50%, 70%, 0.15);
+    border-radius: 20px;
+}
+
+.modal h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.modal .form-group {
+    margin-bottom: 1.25rem;
+}
+
+.modal .form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: hsl(240, 10%, 70%);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.modal input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    font-family: inherit;
+    background: hsla(240, 15%, 18%, 0.9);
+    border: 2px solid hsla(255, 50%, 70%, 0.15);
+    border-radius: 10px;
+    color: white;
+    outline: none;
+}
+
+.modal input:focus {
+    border-color: hsl(275, 80%, 55%);
+}
+
+.buyin-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.buyin-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 0.75rem;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    background: hsla(240, 15%, 18%, 0.9);
+    border: 2px solid hsla(255, 50%, 70%, 0.15);
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mode-btn:hover,
+.buyin-btn:hover {
+    border-color: hsl(275, 80%, 55%);
+}
+
+.mode-btn.active,
+.buyin-btn.active {
+    background: linear-gradient(135deg, hsl(275, 80%, 55%) 0%, hsl(320, 70%, 50%) 100%);
+    border-color: transparent;
+}
+
+.room-create-modal {
+    max-width: 500px;
+}
+
+.modal-scroll-area {
+    max-height: 50vh;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.mode-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 1rem;
+}
+
+.mode-btn .m-icon {
+    font-size: 1.5rem;
+}
+
+.mode-btn .m-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.mode-description {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: hsla(240, 15%, 15%, 0.6);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: hsl(240, 10%, 75%);
+    line-height: 1.4;
+    border-left: 3px solid hsl(275, 80%, 55%);
+}
+
+.buyin-hint {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: hsl(45, 100%, 65%);
+    font-weight: 500;
+}
+
+.powerup-info-box {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: hsla(275, 80%, 20%, 0.2);
+    border: 1px solid hsla(275, 80%, 50%, 0.2);
+    border-radius: 12px;
+}
+
+.powerup-info-box label {
+    color: hsl(275, 80%, 70%) !important;
+    font-size: 0.75rem !important;
+}
+
+.p-list-mini {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.p-list-mini span {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    background: hsla(240, 15%, 20%, 0.8);
+    border-radius: 6px;
+    color: white;
+}
+
+.powerup-info-box p {
+    font-size: 0.75rem;
+    color: hsl(240, 10%, 60%);
+    margin: 0;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.modal-actions .btn {
+    flex: 1;
+}
+
+@media (max-width: 480px) {
+    .lobby-header {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .quick-actions {
+        flex-direction: column;
+    }
+
+    .join-code-box {
+        flex-direction: column;
+    }
+}
+/* Shop Button */
+.btn-shop {
+    background: linear-gradient(135deg, hsl(45, 100%, 50%) 0%, hsl(35, 100%, 45%) 100%) !important;
+    color: hsl(240, 20%, 10%) !important;
+    box-shadow: 0 4px 15px hsla(45, 100%, 50%, 0.4);
+}
+
+.btn-shop:hover {
+    box-shadow: 0 6px 20px hsla(45, 100%, 50%, 0.6);
+}
