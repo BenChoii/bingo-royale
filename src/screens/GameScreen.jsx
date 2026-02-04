@@ -351,8 +351,15 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                                         <div className="race-visual">
                                             <div
                                                 className="mini-card-grid clickable"
-                                                onClick={() => setExpandedPlayer(player)}
-                                                title="Click to view full card"
+                                                onClick={(e) => {
+                                                    // Don't open expanded view when targeting a powerup
+                                                    if (targeting) {
+                                                        e.stopPropagation();
+                                                        return;
+                                                    }
+                                                    setExpandedPlayer(player);
+                                                }}
+                                                title={targeting ? "Click player row to use power-up" : "Click to view full card"}
                                             >
                                                 {player.card?.map((row, rIdx) => (
                                                     row.map((cell, cIdx) => (
