@@ -185,9 +185,14 @@
     align-items: stretch;
 }
 
+.quick-actions>.btn {
+    flex-shrink: 0;
+}
+
 .join-code-box {
     flex: 1;
     min-width: 200px;
+    max-width: 350px;
     display: flex;
     gap: 0.5rem;
 }

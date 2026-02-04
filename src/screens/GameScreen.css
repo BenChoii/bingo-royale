@@ -65,12 +65,25 @@
     overflow: hidden;
 }
 
-/* Sidebar */
+/* Sidebar (left - race tracker & powerups) */
 .game-sidebar {
     width: 280px;
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    flex-shrink: 0;
+    order: 1;
+}
+
+/* Main content (center) */
+.game-main {
+    order: 2;
+}
+
+/* Chat panel on desktop - show on right side */
+.chat-panel {
+    order: 3;
+    width: 280px;
     flex-shrink: 0;
 }
 
