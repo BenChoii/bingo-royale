@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useNotification } from "../components/Notifications";
+import WelcomeDialog from "../components/WelcomeDialog";
 import ShopScreen from "./ShopScreen";
 import LuckyLineGame from "./LuckyLineGame";
 import "./LobbyScreen.css";
@@ -24,6 +25,7 @@ export default function LobbyScreen({ userId, onJoinRoom, onLogout }) {
     const [isJoining, setIsJoining] = useState(false);
     const [showShop, setShowShop] = useState(false);
     const [luckyGameId, setLuckyGameId] = useState(null);
+    const [showWelcome, setShowWelcome] = useState(false);
     const { showNotification } = useNotification();
 
     const user = useQuery(api.users.getUser, { userId: userId });
@@ -36,6 +38,19 @@ export default function LobbyScreen({ userId, onJoinRoom, onLogout }) {
     const canClaimReward = useQuery(api.daily.canClaimReward, { userId });
     const challenges = useQuery(api.challenges.getTodaysChallenges, { userId });
     const currentLuckyGame = useQuery(api.luckyline.getCurrentGame, { userId });
+
+    // Show welcome dialog for new users
+    useEffect(() => {
+        const hasSeenWelcome = localStorage.getItem(`bingo_welcome_${userId}`);
+        if (!hasSeenWelcome && user) {
+            setShowWelcome(true);
+        }
+    }, [userId, user]);
+
+    const handleWelcomeComplete = () => {
+        localStorage.setItem(`bingo_welcome_${userId}`, "true");
+        setShowWelcome(false);
+    };
 
     const handleTopUp = async () => {
         try {
@@ -111,6 +126,9 @@ export default function LobbyScreen({ userId, onJoinRoom, onLogout }) {
 
     return (
         <div className="lobby-screen">
+            {/* Welcome Dialog for New Users */}
+            {showWelcome && <WelcomeDialog onComplete={handleWelcomeComplete} />}
+
             {/* Header */}
             <header className="lobby-header">
                 <div className="logo">

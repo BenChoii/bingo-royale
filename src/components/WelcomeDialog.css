@@ -1,0 +1,411 @@
+/* Welcome Dialog Overlay */
+.welcome-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 20, 0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 1rem;
+}
+
+.welcome-dialog {
+    width: 100%;
+    max-width: 500px;
+    background: linear-gradient(165deg, hsl(255, 30%, 18%) 0%, hsl(255, 25%, 12%) 100%);
+    border-radius: 24px;
+    border: 1px solid hsla(275, 80%, 60%, 0.3);
+    box-shadow:
+        0 0 60px hsla(275, 80%, 50%, 0.3),
+        0 20px 40px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 hsla(0, 0%, 100%, 0.1);
+    padding: 2rem;
+    overflow: hidden;
+}
+
+/* Progress Dots */
+.welcome-progress {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.progress-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: hsla(255, 30%, 40%, 0.5);
+    transition: all 0.3s ease;
+}
+
+.progress-dot.active {
+    background: linear-gradient(135deg, hsl(275, 80%, 60%), hsl(45, 100%, 60%));
+    transform: scale(1.3);
+    box-shadow: 0 0 10px hsla(275, 80%, 60%, 0.6);
+}
+
+.progress-dot.completed {
+    background: hsl(150, 80%, 45%);
+}
+
+/* Welcome Content */
+.welcome-content {
+    text-align: center;
+    min-height: 320px;
+}
+
+.welcome-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff 0%, hsl(45, 100%, 70%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+
+.welcome-subtitle {
+    color: hsla(255, 30%, 80%, 0.9);
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.welcome-body {
+    padding: 0.5rem 0;
+}
+
+/* Welcome Splash (Step 1) */
+.welcome-splash {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.welcome-logo {
+    font-size: 5rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.welcome-tagline {
+    font-size: 1.15rem;
+    color: hsla(255, 20%, 85%, 0.95);
+    line-height: 1.6;
+    max-width: 350px;
+}
+
+.welcome-features-preview {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.welcome-features-preview span {
+    background: hsla(275, 50%, 40%, 0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: hsla(45, 100%, 80%, 1);
+    border: 1px solid hsla(275, 50%, 60%, 0.3);
+}
+
+/* Game Modes Grid (Step 2) */
+.game-modes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.mode-card {
+    background: hsla(255, 25%, 20%, 0.6);
+    border-radius: 16px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid hsla(255, 30%, 40%, 0.3);
+    transition: all 0.3s ease;
+}
+
+.mode-card:hover {
+    transform: translateY(-3px);
+    border-color: hsla(275, 80%, 60%, 0.5);
+}
+
+.mode-icon {
+    font-size: 2rem;
+}
+
+.mode-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: white;
+}
+
+.mode-desc {
+    font-size: 0.75rem;
+    color: hsla(255, 20%, 70%, 0.9);
+    text-align: center;
+}
+
+.mode-card.classic {
+    border-left: 3px solid hsl(120, 70%, 45%);
+}
+
+.mode-card.speed {
+    border-left: 3px solid hsl(45, 100%, 55%);
+}
+
+.mode-card.pattern {
+    border-left: 3px solid hsl(275, 80%, 60%);
+}
+
+.mode-card.blackout {
+    border-left: 3px solid hsl(0, 0%, 30%);
+}
+
+/* Features Showcase (Step 3) */
+.features-showcase {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.feature-row {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.feature-item {
+    background: hsla(255, 25%, 22%, 0.7);
+    border-radius: 12px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 85px;
+    border: 1px solid hsla(255, 30%, 35%, 0.4);
+}
+
+.feature-icon {
+    font-size: 1.75rem;
+}
+
+.feature-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+}
+
+.feature-desc {
+    font-size: 0.65rem;
+    color: hsla(255, 20%, 65%, 0.9);
+}
+
+.boss-preview {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: linear-gradient(135deg, hsla(0, 70%, 30%, 0.3), hsla(30, 80%, 40%, 0.2));
+    border-radius: 14px;
+    padding: 1rem;
+    border: 1px solid hsla(0, 60%, 50%, 0.3);
+}
+
+.boss-icon {
+    font-size: 2.5rem;
+}
+
+.boss-info {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.boss-info strong {
+    color: hsl(30, 90%, 65%);
+    font-size: 1rem;
+}
+
+.boss-info span {
+    font-size: 0.8rem;
+    color: hsla(255, 20%, 75%, 0.9);
+}
+
+/* Social Showcase (Step 4) */
+.social-showcase {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.social-features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.social-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: hsla(255, 25%, 20%, 0.5);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    border: 1px solid hsla(255, 30%, 30%, 0.4);
+}
+
+.social-icon {
+    font-size: 1.5rem;
+}
+
+.social-item span:last-child {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: white;
+}
+
+.gems-bonus {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: linear-gradient(135deg, hsla(275, 60%, 35%, 0.4), hsla(45, 80%, 50%, 0.2));
+    border-radius: 14px;
+    padding: 1rem;
+    border: 1px solid hsla(45, 80%, 60%, 0.4);
+}
+
+.bonus-icon {
+    font-size: 2.5rem;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.bonus-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.bonus-text strong {
+    color: hsl(45, 100%, 65%);
+    font-size: 1.1rem;
+}
+
+.bonus-text span {
+    font-size: 0.8rem;
+    color: hsla(255, 20%, 80%, 0.9);
+}
+
+/* Actions */
+.welcome-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    gap: 1rem;
+}
+
+.btn-skip {
+    background: transparent;
+    border: none;
+    color: hsla(255, 20%, 60%, 0.8);
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    transition: color 0.2s;
+}
+
+.btn-skip:hover {
+    color: white;
+}
+
+.btn-next {
+    flex: 1;
+    background: linear-gradient(135deg, hsl(275, 80%, 55%) 0%, hsl(45, 100%, 55%) 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 14px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px hsla(275, 80%, 50%, 0.4);
+}
+
+.btn-next:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px hsla(275, 80%, 50%, 0.6);
+}
+
+/* Mobile Adjustments */
+@media (max-width: 480px) {
+    .welcome-dialog {
+        padding: 1.5rem;
+        max-width: 95%;
+    }
+
+    .welcome-title {
+        font-size: 1.4rem;
+    }
+
+    .welcome-content {
+        min-height: 280px;
+    }
+
+    .welcome-logo {
+        font-size: 4rem;
+    }
+
+    .game-modes-grid {
+        gap: 0.5rem;
+    }
+
+    .mode-card {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .mode-icon {
+        font-size: 1.5rem;
+    }
+
+    .feature-row {
+        gap: 0.5rem;
+    }
+
+    .feature-item {
+        min-width: 70px;
+        padding: 0.5rem;
+    }
+}
