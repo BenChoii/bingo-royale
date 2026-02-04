@@ -579,7 +579,30 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                 <main className="game-main">
                     {/* Pattern Indicator */}
                     {(isPlaying || roomDetails?.status === "waiting" || isFinished) && (() => {
-                        const patternKey = gameState?.pattern || (roomDetails?.mode === "blackout" ? "blackout" : "line");
+                        // Determine pattern based on game mode
+                        let patternKey;
+                        const mode = roomDetails?.mode || "classic";
+
+                        if (mode === "blackout") {
+                            patternKey = "blackout";
+                        } else if (mode === "pattern") {
+                            // For pattern mode, use the specific pattern from gameState, or show loading
+                            patternKey = gameState?.pattern || null;
+                        } else {
+                            // Classic or speed mode - simple line
+                            patternKey = "line";
+                        }
+
+                        // Don't show indicator if pattern mode but pattern not yet loaded
+                        if (patternKey === null) {
+                            return (
+                                <div className="pattern-indicator">
+                                    <span className="pattern-label">Goal:</span>
+                                    <span className="pattern-name">🎨 Loading pattern...</span>
+                                </div>
+                            );
+                        }
+
                         const isBlackout = patternKey === "blackout";
                         const patternData = SPECIFIC_PATTERNS[patternKey] || SPECIFIC_PATTERNS["line"];
 
