@@ -797,13 +797,13 @@ export default function GameScreen({ userId, roomId, onLeave }) {
 
                     {/* Game Controls */}
                     <div className="game-controls">
-                        {!isPlaying && !isFinished && isHost && (
+                        {!isPlaying && !isFinished && (
                             <button className="btn btn-primary btn-large" onClick={handleStartGame}>
                                 ▶️ Start Game
                             </button>
                         )}
-                        {!isPlaying && !isFinished && !isHost && (
-                            <div className="waiting-message">Waiting for host to start...</div>
+                        {!isPlaying && !isFinished && roomDetails?.players?.length === 1 && (
+                            <div className="solo-hint">Playing solo? AI opponents will join when you start!</div>
                         )}
                         {isPlaying && (
                             <button className="btn btn-accent btn-large" onClick={handleClaimBingo}>
