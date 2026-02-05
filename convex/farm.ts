@@ -1,15 +1,27 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-// Crop definitions
+// Crop definitions - 12 crops with varied times and rewards
 export const CROPS = {
-    seeds: { name: "Seeds", emoji: "🌱", growTime: 30000, gemYield: 1, xp: 1, unlockLevel: 1 },
+    // Quick crops (seconds to minutes)
+    seeds: { name: "Basic Seeds", emoji: "🌱", growTime: 30000, gemYield: 1, xp: 1, unlockLevel: 1 },
+    lettuce: { name: "Lettuce", emoji: "🥬", growTime: 60000, gemYield: 2, xp: 2, unlockLevel: 2 },
     carrot: { name: "Carrots", emoji: "🥕", growTime: 120000, gemYield: 5, xp: 3, unlockLevel: 3 },
+
+    // Medium crops (5-15 min)
+    potato: { name: "Potatoes", emoji: "🥔", growTime: 180000, gemYield: 8, xp: 4, unlockLevel: 4 },
     corn: { name: "Corn", emoji: "🌽", growTime: 300000, gemYield: 12, xp: 6, unlockLevel: 5 },
-    tomato: { name: "Tomatoes", emoji: "🍅", growTime: 600000, gemYield: 25, xp: 10, unlockLevel: 8 },
-    strawberry: { name: "Strawberries", emoji: "🍓", growTime: 1200000, gemYield: 50, xp: 18, unlockLevel: 12 },
-    sunflower: { name: "Sunflowers", emoji: "🌻", growTime: 1800000, gemYield: 75, xp: 25, unlockLevel: 15 },
-    crystalBeet: { name: "Crystal Beets", emoji: "💎", growTime: 3600000, gemYield: 200, xp: 50, unlockLevel: 20 },
+    tomato: { name: "Tomatoes", emoji: "🍅", growTime: 600000, gemYield: 25, xp: 10, unlockLevel: 6 },
+    pepper: { name: "Peppers", emoji: "🌶️", growTime: 900000, gemYield: 40, xp: 14, unlockLevel: 8 },
+
+    // Long crops (20min-1hr)
+    strawberry: { name: "Strawberries", emoji: "🍓", growTime: 1200000, gemYield: 55, xp: 18, unlockLevel: 10 },
+    grapes: { name: "Grapes", emoji: "🍇", growTime: 1500000, gemYield: 65, xp: 22, unlockLevel: 12 },
+    sunflower: { name: "Sunflowers", emoji: "🌻", growTime: 1800000, gemYield: 80, xp: 28, unlockLevel: 14 },
+
+    // Premium crops (1hr+)
+    pumpkin: { name: "Pumpkins", emoji: "🎃", growTime: 2700000, gemYield: 120, xp: 40, unlockLevel: 18 },
+    crystalBeet: { name: "Crystal Beets", emoji: "💎", growTime: 3600000, gemYield: 200, xp: 60, unlockLevel: 20 },
 };
 
 // Plot unlock costs
