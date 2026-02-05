@@ -413,17 +413,25 @@ export const buyShopItem = mutation({
         // Deduct gems
         await ctx.db.patch(args.userId, { coins: user.coins - item.cost });
 
+        // Default structures for backwards compatibility
+        const defaultAnimals = { chickens: 0, ducks: 0, sheep: 0, cows: 0, pigs: 0 };
+        const defaultInventory = { seeds: 0, fertilizer: 0, superFertilizer: 0, waterCan: 0, wool: 0, milk: 0, truffles: 0 };
+
         // Apply item effect
         if (item.type === "consumable" && "gives" in item) {
-            const newInventory = { ...farm.inventory };
+            const currentInventory = farm.inventory || defaultInventory;
+            const newInventory = { ...defaultInventory, ...currentInventory };
             for (const [key, amount] of Object.entries(item.gives)) {
-                newInventory[key as keyof typeof newInventory] += amount as number;
+                newInventory[key as keyof typeof newInventory] = (newInventory[key as keyof typeof newInventory] || 0) + (amount as number);
             }
             await ctx.db.patch(farm._id, { inventory: newInventory });
         } else if (item.type === "animal" && "animal" in item) {
-            const newAnimals = { ...farm.animals };
-            newAnimals[item.animal as keyof typeof newAnimals] += 1;
-            await ctx.db.patch(farm._id, { animals: newAnimals });
+            const currentAnimals = farm.animals || defaultAnimals;
+            const newAnimals = { ...defaultAnimals, ...currentAnimals };
+            newAnimals[item.animal as keyof typeof newAnimals] = (newAnimals[item.animal as keyof typeof newAnimals] || 0) + 1;
+            // Also initialize eggs if not present
+            const currentEggs = farm.eggs || [];
+            await ctx.db.patch(farm._id, { animals: newAnimals, eggs: currentEggs });
         } else if (item.type === "upgrade" && "upgrade" in item) {
             // Handle upgrade items (sprinkler, farmBot)
             if (item.upgrade === "sprinkler") {

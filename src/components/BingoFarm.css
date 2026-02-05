@@ -6,7 +6,7 @@
     bottom: 50px;
     left: 0;
     right: 0;
-    height: 40px;
+    height: 60px;
     pointer-events: none;
     z-index: 999;
     overflow: hidden;
@@ -14,34 +14,40 @@
 
 .walking-animal {
     position: absolute;
-    font-size: 1.8rem;
-    animation: walk-across 15s linear infinite;
+    animation: walk-across 20s linear infinite;
     bottom: 0;
+}
+
+.animal-gif {
+    height: 50px;
+    width: auto;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 @keyframes walk-across {
     0% {
-        left: -50px;
+        left: -80px;
         transform: scaleX(1);
     }
 
     49% {
-        left: calc(100% + 50px);
+        left: calc(100% + 80px);
         transform: scaleX(1);
     }
 
     50% {
-        left: calc(100% + 50px);
+        left: calc(100% + 80px);
         transform: scaleX(-1);
     }
 
     99% {
-        left: -50px;
+        left: -80px;
         transform: scaleX(-1);
     }
 
     100% {
-        left: -50px;
+        left: -80px;
         transform: scaleX(1);
     }
 }

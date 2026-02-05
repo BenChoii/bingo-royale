@@ -29,20 +29,35 @@ const ANIMALS = {
     pig: { emoji: "🐷", name: "Pig", cost: 1000, producePerHour: 1, sellPrice: 30, roiHours: 33 },
 };
 
-// Animated animal component
+// Animated animal GIF URLs (using cute pixel art style)
+const ANIMAL_GIFS = {
+    chicken: "https://media.giphy.com/media/VjKbDVpFlaU5q/giphy.gif",
+    duck: "https://media.giphy.com/media/QBQGNKp14cgCc/giphy.gif",
+    sheep: "https://media.giphy.com/media/kBtAfDl0OQvfO/giphy.gif",
+    cow: "https://media.giphy.com/media/1WSWCn2U6eeJO/giphy.gif",
+    pig: "https://media.giphy.com/media/JqEB4KVrjwdag/giphy.gif",
+};
+
+// Animated animal component with cute GIF
 function WalkingAnimal({ type, index }) {
     const animal = ANIMALS[type];
+    const gif = ANIMAL_GIFS[type];
     if (!animal) return null;
 
     return (
         <div
             className="walking-animal"
             style={{
-                animationDelay: `${index * 2}s`,
-                animationDuration: `${15 + index * 3}s`
+                animationDelay: `${index * 3}s`,
+                animationDuration: `${20 + index * 5}s`
             }}
         >
-            {animal.emoji}
+            <img
+                src={gif}
+                alt={animal.name}
+                className="animal-gif"
+                onError={(e) => { e.target.style.display = 'none'; }}
+            />
         </div>
     );
 }
@@ -98,7 +113,9 @@ export default function BingoFarm({ userId }) {
         try {
             const result = await harvestCrops({ userId });
             if (result?.success) {
-                showNotification(`+${result.gemsEarned} 💎!`, "success");
+                showNotification(`+${result.gemsEarned} 💎 from ${result.harvested} crops!`, "success");
+            } else {
+                showNotification(result?.error || "No crops ready", "error");
             }
         } catch (e) {
             console.error("Harvest error:", e);
@@ -167,8 +184,8 @@ export default function BingoFarm({ userId }) {
         ([key]) => CROPS[key].unlockLevel <= farm.farmLevel
     );
 
-    const totalAnimals = farm.animals ?
-        (farm.animals.chickens + farm.animals.ducks + farm.animals.sheep + farm.animals.cows + farm.animals.pigs) : 0;
+    const animals = farm.animals || { chickens: 0, ducks: 0, sheep: 0, cows: 0, pigs: 0 };
+    const totalAnimals = animals.chickens + animals.ducks + animals.sheep + animals.cows + animals.pigs;
 
     const eggs = farm.eggs || [];
     const sellableEggs = eggs.filter(e => !e.nurturing);
@@ -185,13 +202,11 @@ export default function BingoFarm({ userId }) {
 
     // Build list of owned animals for walking animation
     const ownedAnimals = [];
-    if (farm.animals) {
-        for (let i = 0; i < farm.animals.chickens; i++) ownedAnimals.push({ type: 'chicken', i });
-        for (let i = 0; i < farm.animals.ducks; i++) ownedAnimals.push({ type: 'duck', i });
-        for (let i = 0; i < farm.animals.sheep; i++) ownedAnimals.push({ type: 'sheep', i });
-        for (let i = 0; i < farm.animals.cows; i++) ownedAnimals.push({ type: 'cow', i });
-        for (let i = 0; i < farm.animals.pigs; i++) ownedAnimals.push({ type: 'pig', i });
-    }
+    for (let i = 0; i < animals.chickens; i++) ownedAnimals.push({ type: 'chicken', i });
+    for (let i = 0; i < animals.ducks; i++) ownedAnimals.push({ type: 'duck', i });
+    for (let i = 0; i < animals.sheep; i++) ownedAnimals.push({ type: 'sheep', i });
+    for (let i = 0; i < animals.cows; i++) ownedAnimals.push({ type: 'cow', i });
+    for (let i = 0; i < animals.pigs; i++) ownedAnimals.push({ type: 'pig', i });
 
     // Full screen farm view
     if (isFullScreen) {
@@ -232,7 +247,7 @@ export default function BingoFarm({ userId }) {
                                     <div
                                         key={index}
                                         className={`farm-plot-large ${plot.isReady ? "ready" : ""} ${!plot.cropType ? "empty" : ""}`}
-                                        onClick={() => handlePlant(index)}
+                                        onClick={() => !plot.cropType && handlePlant(index)}
                                     >
                                         {plot.cropType ? (
                                             <>
@@ -244,6 +259,7 @@ export default function BingoFarm({ userId }) {
                                                         <div className="plot-progress-fill-lg" style={{ width: `${plot.progress || 0}%` }} />
                                                     </div>
                                                 )}
+                                                {plot.isReady && <span className="ready-badge">✓</span>}
                                             </>
                                         ) : (
                                             <span className="empty-plot-lg">+</span>
@@ -254,7 +270,7 @@ export default function BingoFarm({ userId }) {
                         </div>
                         {readyCrops > 0 && (
                             <button className="harvest-btn-large" onClick={handleHarvest}>
-                                🌾 Harvest ({readyCrops})
+                                🌾 Harvest {readyCrops} Ready
                             </button>
                         )}
                     </div>
@@ -264,11 +280,11 @@ export default function BingoFarm({ userId }) {
                         <div className="farm-fs-section">
                             <h3>🐾 Animals</h3>
                             <div className="animals-compact">
-                                {farm.animals?.chickens > 0 && <span>🐔×{farm.animals.chickens}</span>}
-                                {farm.animals?.ducks > 0 && <span>🦆×{farm.animals.ducks}</span>}
-                                {farm.animals?.sheep > 0 && <span>🐑×{farm.animals.sheep}</span>}
-                                {farm.animals?.cows > 0 && <span>🐄×{farm.animals.cows}</span>}
-                                {farm.animals?.pigs > 0 && <span>🐷×{farm.animals.pigs}</span>}
+                                {animals.chickens > 0 && <span>🐔×{animals.chickens}</span>}
+                                {animals.ducks > 0 && <span>🦆×{animals.ducks}</span>}
+                                {animals.sheep > 0 && <span>🐑×{animals.sheep}</span>}
+                                {animals.cows > 0 && <span>🐄×{animals.cows}</span>}
+                                {animals.pigs > 0 && <span>🐷×{animals.pigs}</span>}
                             </div>
                             {totalAnimals > 0 && (
                                 <button className="collect-btn" onClick={handleCollectAnimals}>Collect</button>
@@ -393,10 +409,10 @@ export default function BingoFarm({ userId }) {
     // MINIMAL collapsed bar - just crop icons
     return (
         <>
-            {/* Walking animals across screen */}
+            {/* Walking animals across screen with GIFs */}
             <div className="walking-animals-container">
                 {ownedAnimals.slice(0, 5).map((a, i) => (
-                    <WalkingAnimal key={`${a.type}-${i}`} type={a.type} index={i} />
+                    <WalkingAnimal key={`${a.type}-${a.i}-${i}`} type={a.type} index={i} />
                 ))}
             </div>
 
