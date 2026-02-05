@@ -47,8 +47,8 @@ function WalkingAnimal({ type, index }) {
         <div
             className="walking-animal"
             style={{
-                animationDelay: `${index * 3}s`,
-                animationDuration: `${18 + index * 4}s`
+                animationDelay: `${index * 8}s`,
+                animationDuration: `${60 + index * 15}s`
             }}
         >
             <span className="animal-sprite">{animal.emoji}</span>
@@ -281,7 +281,38 @@ export default function BingoFarm({ userId }) {
                                 {animals.pigs > 0 && <span>🐷×{animals.pigs}</span>}
                             </div>
                             {totalAnimals > 0 && (
-                                <button className="collect-btn" onClick={handleCollectAnimals}>Collect</button>
+                                <>
+                                    {/* Collection progress */}
+                                    {(() => {
+                                        const lastCollect = farm.lastAnimalCollect || farm.createdAt;
+                                        const msSinceCollect = now - lastCollect;
+                                        const minsSinceCollect = Math.floor(msSinceCollect / 60000);
+                                        const minsToReady = 30 - minsSinceCollect;
+                                        const isReady = minsToReady <= 0;
+                                        const progress = Math.min(100, (msSinceCollect / 1800000) * 100);
+
+                                        return (
+                                            <div className="animal-progress-container">
+                                                <div className="animal-progress-bar">
+                                                    <div className="animal-progress-fill" style={{ width: `${progress}%` }} />
+                                                </div>
+                                                <span className="animal-progress-text">
+                                                    {isReady ? "Ready to collect!" : `${minsToReady}m until ready`}
+                                                </span>
+                                            </div>
+                                        );
+                                    })()}
+                                    <button
+                                        className="collect-btn"
+                                        onClick={handleCollectAnimals}
+                                        disabled={(() => {
+                                            const lastCollect = farm.lastAnimalCollect || farm.createdAt;
+                                            return (now - lastCollect) < 1800000;
+                                        })()}
+                                    >
+                                        Collect Produce
+                                    </button>
+                                </>
                             )}
 
                             {/* Goods */}

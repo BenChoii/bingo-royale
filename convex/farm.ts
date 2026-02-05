@@ -465,8 +465,10 @@ export const collectAnimalGems = mutation({
             return { success: false, error: "Animals need more time (30min)" };
         }
 
-        const totalAnimals = farm.animals.chickens + farm.animals.ducks +
-            farm.animals.sheep + farm.animals.cows + farm.animals.pigs;
+        // Safely access animals with defaults
+        const animals = farm.animals || { chickens: 0, ducks: 0, sheep: 0, cows: 0, pigs: 0 };
+        const totalAnimals = (animals.chickens || 0) + (animals.ducks || 0) +
+            (animals.sheep || 0) + (animals.cows || 0) + (animals.pigs || 0);
 
         if (totalAnimals === 0) {
             return { success: false, error: "No animals to collect from" };
@@ -477,24 +479,30 @@ export const collectAnimalGems = mutation({
 
         // Chickens & Ducks lay eggs
         const newEggs: { type: string; laidAt: number; nurturing: boolean }[] = [];
-        for (let i = 0; i < farm.animals.chickens * productionMultiplier; i++) {
+        for (let i = 0; i < (animals.chickens || 0) * productionMultiplier; i++) {
             newEggs.push({ type: "chicken", laidAt: now, nurturing: false });
         }
-        for (let i = 0; i < farm.animals.ducks * productionMultiplier; i++) {
+        for (let i = 0; i < (animals.ducks || 0) * productionMultiplier; i++) {
             newEggs.push({ type: "duck", laidAt: now, nurturing: false });
         }
 
         // Sheep, Cows, Pigs produce goods
-        const woolProduced = farm.animals.sheep * productionMultiplier;
-        const milkProduced = farm.animals.cows * productionMultiplier;
-        const trufflesProduced = farm.animals.pigs * productionMultiplier;
+        const woolProduced = (animals.sheep || 0) * productionMultiplier;
+        const milkProduced = (animals.cows || 0) * productionMultiplier;
+        const trufflesProduced = (animals.pigs || 0) * productionMultiplier;
 
-        // Update farm
+        // Update farm with proper defaults
         const currentEggs = farm.eggs || [];
-        const newInventory = { ...farm.inventory };
-        newInventory.wool = (newInventory.wool || 0) + woolProduced;
-        newInventory.milk = (newInventory.milk || 0) + milkProduced;
-        newInventory.truffles = (newInventory.truffles || 0) + trufflesProduced;
+        const currentInventory = farm.inventory || { seeds: 0, fertilizer: 0, superFertilizer: 0, waterCan: 0, wool: 0, milk: 0, truffles: 0 };
+        const newInventory = {
+            seeds: currentInventory.seeds || 0,
+            fertilizer: currentInventory.fertilizer || 0,
+            superFertilizer: currentInventory.superFertilizer || 0,
+            waterCan: currentInventory.waterCan || 0,
+            wool: (currentInventory.wool || 0) + woolProduced,
+            milk: (currentInventory.milk || 0) + milkProduced,
+            truffles: (currentInventory.truffles || 0) + trufflesProduced,
+        };
 
         await ctx.db.patch(farm._id, {
             lastAnimalCollect: now,
