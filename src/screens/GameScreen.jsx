@@ -157,14 +157,19 @@ export default function GameScreen({ userId, roomId, onLeave }) {
     const handleClaimBingo = async () => {
         // Boss battle mode - use boss-specific bingo
         if (activeBoss?.status === "active") {
-            const result = await claimBossBingo({ roomId, odId: userId });
-            if (!result.success) {
-                showNotification(result.error || "Not a valid bingo!", "error");
-            } else {
-                showNotification(`💥 BINGO! ${result.damage} MASSIVE DAMAGE to the boss!`, "success");
-                if (result.victory) {
-                    showNotification("🏆 VICTORY! Boss defeated!", "success");
+            try {
+                const result = await claimBossBingo({ roomId, odId: userId });
+                if (!result.success) {
+                    showNotification(result.error || "Not a valid bingo!", "error");
+                } else {
+                    showNotification(`💥 BINGO! ${result.damage} MASSIVE DAMAGE to the boss!`, "success");
+                    if (result.victory) {
+                        showNotification("🏆 VICTORY! Boss defeated!", "success");
+                    }
                 }
+            } catch (err) {
+                console.error("claimBossBingo error:", err);
+                showNotification("Error claiming bingo", "error");
             }
             return;
         }

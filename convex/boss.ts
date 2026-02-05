@@ -720,7 +720,6 @@ export const claimBossBingo = mutation({
             userAvatar: user?.avatar || "👤",
             damage: bingoDamage,
             timestamp: Date.now(),
-            isBingo: true,
         };
 
         const recentEvents = (bossGame.damageEvents || []).slice(-9);
