@@ -1271,6 +1271,264 @@
     font-weight: 600;
 }
 
+/* Mobile Gems Display - Center of nav bar */
+.mobile-gems-display {
+    display: none;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, hsla(45, 100%, 50%, 0.2) 0%, hsla(35, 90%, 55%, 0.1) 100%);
+    border: 1px solid hsla(45, 100%, 50%, 0.3);
+    border-radius: 20px;
+    color: hsl(45, 100%, 60%);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+/* Mobile Power-ups Quick Bar */
+.mobile-powerups-bar {
+    display: none;
+    position: fixed;
+    bottom: 180px;
+    left: 0;
+    right: 0;
+    background: hsla(240, 20%, 8%, 0.95);
+    border-top: 1px solid hsla(255, 50%, 70%, 0.1);
+    padding: 0.5rem;
+    z-index: 90;
+    backdrop-filter: blur(12px);
+}
+
+.powerups-scroll {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.powerups-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.mobile-powerup-btn {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.4rem 0.6rem;
+    background: hsla(240, 15%, 20%, 0.8);
+    border: 1px solid hsla(255, 50%, 70%, 0.2);
+    border-radius: 10px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.mobile-powerup-btn:disabled {
+    opacity: 0.4;
+}
+
+.mobile-powerup-btn.active-targeting {
+    background: hsla(275, 80%, 50%, 0.3);
+    border-color: hsl(275, 80%, 55%);
+    animation: pulse-target 1s infinite;
+}
+
+@keyframes pulse-target {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 hsla(275, 80%, 55%, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px hsla(275, 80%, 55%, 0);
+    }
+}
+
+.mp-icon {
+    font-size: 1.3rem;
+}
+
+.mp-cost {
+    font-size: 0.6rem;
+    color: hsl(45, 100%, 60%);
+    font-weight: 700;
+}
+
+.mp-cooldown {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: hsla(0, 0%, 0%, 0.7);
+    border-radius: 10px;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.targeting-banner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem;
+    background: linear-gradient(90deg, hsla(275, 80%, 50%, 0.3) 0%, hsla(320, 70%, 50%, 0.3) 100%);
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    animation: glow-border 1.5s infinite;
+}
+
+@keyframes glow-border {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px hsla(275, 80%, 55%, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 0 15px hsla(275, 80%, 55%, 0.8);
+    }
+}
+
+.targeting-banner button {
+    background: hsla(0, 70%, 50%, 0.3);
+    border: 1px solid hsl(0, 70%, 55%);
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+}
+
+/* Mobile Opponents Strip */
+.mobile-opponents-strip {
+    display: none;
+    position: fixed;
+    bottom: 115px;
+    left: 0;
+    right: 0;
+    background: hsla(240, 20%, 6%, 0.95);
+    border-top: 1px solid hsla(255, 50%, 70%, 0.1);
+    padding: 0.5rem;
+    z-index: 85;
+    backdrop-filter: blur(12px);
+}
+
+.opponents-scroll {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.opponents-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.mobile-opponent-card {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.5rem;
+    background: hsla(240, 15%, 15%, 0.9);
+    border: 2px solid hsla(255, 50%, 70%, 0.15);
+    border-radius: 12px;
+    min-width: 70px;
+    transition: all 0.2s ease;
+}
+
+.mobile-opponent-card.targetable {
+    border-color: hsl(275, 80%, 55%);
+    cursor: pointer;
+    animation: target-glow 1s infinite;
+}
+
+@keyframes target-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 8px hsla(275, 80%, 55%, 0.6);
+    }
+
+    50% {
+        box-shadow: 0 0 16px hsla(275, 80%, 55%, 0.9);
+    }
+}
+
+.mobile-opponent-card.frozen {
+    border-color: hsl(190, 100%, 70%);
+    background: hsla(190, 50%, 30%, 0.3);
+}
+
+.mobile-opponent-card.shielded {
+    border-color: hsl(45, 100%, 60%);
+}
+
+.mo-header {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.mo-avatar {
+    font-size: 1.2rem;
+}
+
+.mo-status {
+    font-size: 0.7rem;
+}
+
+.mo-name {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mo-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 8px);
+    grid-template-rows: repeat(5, 8px);
+    gap: 1px;
+}
+
+.mo-cell {
+    width: 8px;
+    height: 8px;
+    background: hsla(240, 15%, 25%, 0.6);
+    border-radius: 1px;
+}
+
+.mo-cell.daubed {
+    background: hsl(145, 80%, 50%);
+}
+
+.mo-distance {
+    font-size: 0.55rem;
+    color: hsl(45, 100%, 60%);
+    font-weight: 600;
+}
+
+.no-opponents {
+    color: hsl(240, 10%, 50%);
+    font-size: 0.8rem;
+    padding: 0.5rem 1rem;
+    font-style: italic;
+}
+
 /* Mobile Overlay */
 .mobile-overlay {
     display: block;
@@ -1347,7 +1605,7 @@
 .floating-bingo-btn {
     display: none;
     position: fixed;
-    bottom: 80px;
+    bottom: 260px;
     right: 20px;
     width: 70px;
     height: 70px;
@@ -1393,7 +1651,7 @@
 .floating-start-btn {
     display: none;
     position: fixed;
-    bottom: 80px;
+    bottom: 260px;
     right: 20px;
     width: 70px;
     height: 70px;
@@ -1733,7 +1991,7 @@
 /* Responsive Media Queries */
 @media (max-width: 768px) {
     .game-layout {
-        padding-bottom: 70px;
+        padding-bottom: 250px;
     }
 
     .game-sidebar {
@@ -1742,7 +2000,10 @@
 
     .mobile-nav,
     .floating-bingo-btn,
-    .floating-start-btn {
+    .floating-start-btn,
+    .mobile-powerups-bar,
+    .mobile-opponents-strip,
+    .mobile-gems-display {
         display: flex;
     }
 

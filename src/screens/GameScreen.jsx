@@ -499,7 +499,77 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                     </div>
                 </aside>
 
-                {/* Mobile Bottom Navigation */}
+                {/* ==== MOBILE-ONLY SECTIONS (Visible on small screens) ==== */}
+
+                {/* Mobile Power-ups Quick Bar - Always visible during game */}
+                <div className="mobile-powerups-bar">
+                    <div className="powerups-scroll">
+                        {PVP_POWERUPS.map((po) => {
+                            const cooldown = cooldowns[po.type];
+                            const isTargetingThis = targeting?.type === po.type;
+                            return (
+                                <button
+                                    key={po.type}
+                                    className={`mobile-powerup-btn ${cooldown ? 'on-cooldown' : ''} ${isTargetingThis ? 'active-targeting' : ''}`}
+                                    onClick={() => handleUsePowerup(po.type)}
+                                    disabled={(!isPlaying && !isBossBattleActive) || (user?.coins || 0) < po.cost || !!cooldown}
+                                    title={po.desc}
+                                >
+                                    <span className="mp-icon">{po.icon}</span>
+                                    <span className="mp-cost">{po.cost}</span>
+                                    {cooldown > 0 && <div className="mp-cooldown">{cooldown}</div>}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    {targeting && (
+                        <div className="targeting-banner">
+                            <span>👆 Select target below</span>
+                            <button onClick={() => setTargeting(null)}>✕</button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Mobile Opponents Strip - Always visible */}
+                <div className="mobile-opponents-strip">
+                    <div className="opponents-scroll">
+                        {gameState?.players?.filter(p => p.odId !== userId).map((player) => {
+                            const isFrozen = player.frozenUntil && player.frozenUntil > Date.now();
+                            const isShielded = player.shieldUntil && player.shieldUntil > Date.now();
+                            const isTargetable = targeting && !player.isBot;
+                            return (
+                                <div
+                                    key={player.odId}
+                                    className={`mobile-opponent-card ${isTargetable ? 'targetable' : ''} ${isFrozen ? 'frozen' : ''} ${isShielded ? 'shielded' : ''}`}
+                                    onClick={() => isTargetable && handleUsePowerup(targeting.type, player.odId)}
+                                >
+                                    <div className="mo-header">
+                                        <span className="mo-avatar">{player.avatar}</span>
+                                        {isFrozen && <span className="mo-status">🧊</span>}
+                                        {isShielded && <span className="mo-status">🛡️</span>}
+                                    </div>
+                                    <span className="mo-name">{player.name?.split(' ')[0] || 'Player'}</span>
+                                    <div className="mo-mini-grid">
+                                        {player.card?.map((row, rIdx) => (
+                                            row.map((cell, cIdx) => (
+                                                <div
+                                                    key={`${rIdx}-${cIdx}`}
+                                                    className={`mo-cell ${cell.daubed ? 'daubed' : ''}`}
+                                                />
+                                            ))
+                                        ))}
+                                    </div>
+                                    <span className="mo-distance">{player.distanceToBingo} away</span>
+                                </div>
+                            );
+                        })}
+                        {(!gameState?.players || gameState.players.filter(p => p.odId !== userId).length === 0) && (
+                            <div className="no-opponents">Waiting for opponents...</div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Mobile Bottom Navigation - Simplified to just Race and Chat */}
                 <div className="mobile-nav">
                     <button
                         className={`mobile-nav-btn ${mobileTab === 'race' ? 'active' : ''}`}
@@ -508,13 +578,9 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                         <span className="nav-icon">🏁</span>
                         <span className="nav-label">Race</span>
                     </button>
-                    <button
-                        className={`mobile-nav-btn ${mobileTab === 'powerups' ? 'active' : ''}`}
-                        onClick={() => { setMobileTab('powerups'); setShowMobileOverlay(true); }}
-                    >
-                        <span className="nav-icon">⚡</span>
-                        <span className="nav-label">Power-ups</span>
-                    </button>
+                    <div className="mobile-gems-display">
+                        💎 {user?.coins || 0}
+                    </div>
                     <button
                         className={`mobile-nav-btn ${mobileTab === 'chat' ? 'active' : ''}`}
                         onClick={() => { setMobileTab('chat'); setShowMobileOverlay(true); }}
