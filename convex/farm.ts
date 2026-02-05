@@ -222,10 +222,11 @@ export const harvestCrops = mutation({
                         harvestCount++;
                     }
 
-                    // Auto-replant the same crop (reset timer, clear fertilized)
+                    // Clear the plot after harvest (user chooses what to plant next)
                     return {
-                        ...plot,
-                        plantedAt: now,
+                        cropType: undefined,
+                        plantedAt: undefined,
+                        growTime: undefined,
                         isReady: false,
                         fertilized: false,
                     };

@@ -29,19 +29,18 @@ const ANIMALS = {
     pig: { emoji: "🐷", name: "Pig", cost: 1000, producePerHour: 1, sellPrice: 30, roiHours: 33 },
 };
 
-// Animated animal GIF URLs (using cute pixel art style)
+// Animated animal GIF URLs (using cute pixel art style - public domain)
 const ANIMAL_GIFS = {
-    chicken: "https://media.giphy.com/media/VjKbDVpFlaU5q/giphy.gif",
-    duck: "https://media.giphy.com/media/QBQGNKp14cgCc/giphy.gif",
-    sheep: "https://media.giphy.com/media/kBtAfDl0OQvfO/giphy.gif",
-    cow: "https://media.giphy.com/media/1WSWCn2U6eeJO/giphy.gif",
-    pig: "https://media.giphy.com/media/JqEB4KVrjwdag/giphy.gif",
+    chicken: "https://i.imgur.com/JQQhXHb.gif",
+    duck: "https://i.imgur.com/R9jdQE4.gif",
+    sheep: "https://i.imgur.com/kN4sPnR.gif",
+    cow: "https://i.imgur.com/vXvNcGd.gif",
+    pig: "https://i.imgur.com/5S3yWv1.gif",
 };
 
-// Animated animal component with cute GIF
+// Animated animal component - uses emoji with CSS animation 
 function WalkingAnimal({ type, index }) {
     const animal = ANIMALS[type];
-    const gif = ANIMAL_GIFS[type];
     if (!animal) return null;
 
     return (
@@ -49,15 +48,10 @@ function WalkingAnimal({ type, index }) {
             className="walking-animal"
             style={{
                 animationDelay: `${index * 3}s`,
-                animationDuration: `${20 + index * 5}s`
+                animationDuration: `${18 + index * 4}s`
             }}
         >
-            <img
-                src={gif}
-                alt={animal.name}
-                className="animal-gif"
-                onError={(e) => { e.target.style.display = 'none'; }}
-            />
+            <span className="animal-sprite">{animal.emoji}</span>
         </div>
     );
 }

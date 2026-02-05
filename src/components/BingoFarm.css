@@ -18,6 +18,25 @@
     bottom: 0;
 }
 
+.animal-sprite {
+    font-size: 2.5rem;
+    display: inline-block;
+    animation: bounce-walk 0.4s ease-in-out infinite;
+    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.4));
+}
+
+@keyframes bounce-walk {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(-3deg);
+    }
+
+    50% {
+        transform: translateY(-8px) rotate(3deg);
+    }
+}
+
 .animal-gif {
     height: 50px;
     width: auto;
