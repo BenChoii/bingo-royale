@@ -258,7 +258,18 @@ export const getRoomDetails = query({
 
         const playersWithDetails = await Promise.all(
             players.map(async (player) => {
-                const user = await ctx.db.get(player.odId);
+                // Handle bots differently
+                if (player.isBot) {
+                    return {
+                        ...player,
+                        name: player.botName || "AI Player",
+                        avatar: player.botAvatar || "🤖",
+                        level: 99, // Bots show as high level
+                        isBot: true,
+                    };
+                }
+
+                const user = player.odId ? await ctx.db.get(player.odId) : null;
                 return {
                     ...player,
                     name: user?.name || "Unknown",

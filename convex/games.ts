@@ -91,6 +91,21 @@ export const startGame = mutation({
             }
         }
 
+        // Get human players count
+        const humanPlayers = await ctx.db
+            .query("roomPlayers")
+            .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+            .filter((q) => q.neq(q.field("isBot"), true))
+            .collect();
+
+        // If only 1 human player, add AI bots
+        if (humanPlayers.length === 1) {
+            await ctx.runMutation(internal.aiBots.addBotsToRoom, {
+                roomId: args.roomId,
+                buyIn: room.buyIn,
+            });
+        }
+
         // Update room status
         await ctx.db.patch(args.roomId, { status: "playing" });
 
@@ -181,6 +196,9 @@ export const callNextNumber = internalMutation({
 
         const now = Date.now();
         for (const player of players) {
+            // Skip bots - they daub on their own schedule
+            if (player.isBot) continue;
+
             // Check if player is frozen
             if (player.frozenUntil && player.frozenUntil > now) {
                 continue;
@@ -206,6 +224,25 @@ export const callNextNumber = internalMutation({
                     distanceToBingo: distance,
                 });
             }
+        }
+
+        // Schedule bot daubing with difficulty-based delays
+        const bots = players.filter(p => p.isBot);
+        for (const bot of bots) {
+            const difficulty = bot.botDifficulty || "easy";
+            const delays: Record<string, number> = {
+                easy: 2000,
+                medium: 1000,
+                hard: 500,
+                expert: 200,
+            };
+            const delay = delays[difficulty] || 2000;
+
+            await ctx.scheduler.runAfter(delay, internal.aiBots.botDaubNumber, {
+                botPlayerId: bot._id,
+                number: nextNumber,
+                gameId: args.gameId,
+            });
         }
 
         // Schedule next number call

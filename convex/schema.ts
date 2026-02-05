@@ -51,7 +51,7 @@ export default defineSchema({
     // Players in a room
     roomPlayers: defineTable({
         roomId: v.id("rooms"),
-        odId: v.id("users"),
+        odId: v.optional(v.id("users")), // Optional for bots
         card: v.array(v.array(v.object({
             value: v.union(v.number(), v.string()),
             daubed: v.boolean(),
@@ -64,6 +64,11 @@ export default defineSchema({
         shieldUntil: v.optional(v.number()),
         scrambledAt: v.optional(v.number()),
         joinedAt: v.number(),
+        // Bot fields
+        isBot: v.optional(v.boolean()),
+        botName: v.optional(v.string()),
+        botAvatar: v.optional(v.string()),
+        botDifficulty: v.optional(v.string()),
     })
         .index("by_room", ["roomId"])
         .index("by_user", ["odId"]),
