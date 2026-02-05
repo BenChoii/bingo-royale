@@ -230,4 +230,28 @@ export default defineSchema({
         createdAt: v.number(),
     }).index("by_session", ["sessionId"])
         .index("by_user", ["userId"]),
+
+    // User Subscriptions
+    subscriptions: defineTable({
+        userId: v.id("users"),
+        stripeSubscriptionId: v.string(),
+        stripePriceId: v.string(),
+        tier: v.union(
+            v.literal("bronze"),
+            v.literal("silver"),
+            v.literal("gold"),
+            v.literal("diamond"),
+            v.literal("vip")
+        ),
+        status: v.union(
+            v.literal("active"),
+            v.literal("canceled"),
+            v.literal("past_due"),
+            v.literal("trialing")
+        ),
+        monthlyGems: v.number(),
+        currentPeriodEnd: v.number(),
+        createdAt: v.number(),
+    }).index("by_user", ["userId"])
+        .index("by_stripe_id", ["stripeSubscriptionId"]),
 });

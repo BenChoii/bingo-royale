@@ -20,6 +20,7 @@ import type * as paymentHelpers from "../paymentHelpers.js";
 import type * as payments from "../payments.js";
 import type * as powerups from "../powerups.js";
 import type * as rooms from "../rooms.js";
+import type * as subscriptions from "../subscriptions.js";
 import type * as users from "../users.js";
 
 import type {
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   payments: typeof payments;
   powerups: typeof powerups;
   rooms: typeof rooms;
+  subscriptions: typeof subscriptions;
   users: typeof users;
 }>;
 

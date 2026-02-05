@@ -14,6 +14,15 @@ const GEM_PACKAGES = [
     { id: "ultra", name: "Whale", gems: 10000, price: "$19.99", priceNum: 1999, bonus: "+67%" },
 ];
 
+// Subscription tiers (20% cheaper per gem)
+const SUBSCRIPTION_TIERS = [
+    { id: "bronze", name: "Bronze", gems: 17500, price: "$28", emoji: "🥉", color: "#cd7f32" },
+    { id: "silver", name: "Silver", gems: 40000, price: "$58", emoji: "🥈", color: "#c0c0c0" },
+    { id: "gold", name: "Gold", gems: 90000, price: "$120", emoji: "🥇", color: "#ffd700", popular: true },
+    { id: "diamond", name: "Diamond", gems: 160000, price: "$200", emoji: "💎", color: "#b9f2ff" },
+    { id: "vip", name: "VIP", gems: 280000, price: "$300", emoji: "👑", color: "#9b59b6" },
+];
+
 // Visual previews for cosmetics
 const COSMETIC_PREVIEWS = {
     // Daub styles
@@ -38,7 +47,7 @@ const COSMETIC_PREVIEWS = {
     "anim-lightning": "⚡",
 };
 
-const TABS = ["gems", "lucky", "cosmetics"];
+const TABS = ["gems", "subscriptions", "lucky", "cosmetics"];
 
 export default function ShopScreen({ userId, onClose }) {
     const [tab, setTab] = useState("gems");
@@ -57,30 +66,54 @@ export default function ShopScreen({ userId, onClose }) {
     const equipCosmetic = useMutation(api.cosmetics.equipCosmetic);
     const createCheckout = useAction(api.payments.createCheckoutSession);
     const verifyPayment = useAction(api.payments.verifyPayment);
+    const createSubCheckout = useAction(api.payments.createSubscriptionCheckout);
+    const verifySubscription = useAction(api.payments.verifySubscription);
+    const cancelSub = useAction(api.payments.cancelSubscription);
+    const activeSubscription = useQuery(api.subscriptions.getActiveSubscription, userId ? { userId } : "skip");
+    const user = useQuery(api.users.getById, userId ? { id: userId } : "skip");
 
     const [processingPayment, setProcessingPayment] = useState(false);
+    const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
     // Check for payment success on return from Stripe
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get("session_id");
         const packageId = urlParams.get("package");
+        const tier = urlParams.get("tier");
+        const type = urlParams.get("type");
 
-        if (sessionId && packageId) {
-            // Verify payment and grant gems
+        if (sessionId && type === "subscription" && tier) {
+            // Verify subscription
+            verifySubscription({ sessionId }).then((result) => {
+                if (result.success) {
+                    showNotification(`🎉 ${result.tier?.toUpperCase()} subscription activated! +${result.gems?.toLocaleString()}💎`, "success");
+                } else {
+                    showNotification(result.error || "Subscription verification failed", "error");
+                }
+                window.history.replaceState({}, document.title, window.location.pathname);
+            });
+        } else if (sessionId && packageId) {
+            // Verify one-time payment
             verifyPayment({ sessionId }).then((result) => {
                 if (result.success) {
                     showNotification(`💎 +${result.gems?.toLocaleString()} Gems added to your account!`, "success");
                 } else {
                     showNotification(result.error || "Payment verification failed", "error");
                 }
-                // Clear URL params
                 window.history.replaceState({}, document.title, window.location.pathname);
             }).catch((err) => {
                 console.error("Payment verification error:", err);
             });
         }
-    }, [verifyPayment, showNotification]);
+    }, [verifyPayment, verifySubscription, showNotification]);
+
+    // Show upgrade prompt when gems are low and user has subscription
+    useEffect(() => {
+        if (user && activeSubscription && user.coins < 500) {
+            setShowUpgradePrompt(true);
+        }
+    }, [user, activeSubscription]);
 
     const handleBuyGems = async (packageId) => {
         if (processingPayment) return;
@@ -104,6 +137,50 @@ export default function ShopScreen({ userId, onClose }) {
         } catch (error) {
             console.error("Checkout error:", error);
             showNotification("Payment error. Please try again.", "error");
+        } finally {
+            setProcessingPayment(false);
+        }
+    };
+
+    const handleSubscribe = async (tier) => {
+        if (processingPayment) return;
+        setProcessingPayment(true);
+
+        try {
+            const currentUrl = window.location.origin + window.location.pathname;
+            const result = await createSubCheckout({
+                userId,
+                tier,
+                successUrl: currentUrl,
+                cancelUrl: currentUrl,
+            });
+
+            if (result.url) {
+                window.location.href = result.url;
+            } else {
+                showNotification("Failed to create subscription checkout", "error");
+            }
+        } catch (error) {
+            console.error("Subscription error:", error);
+            showNotification(error.message || "Subscription error", "error");
+        } finally {
+            setProcessingPayment(false);
+        }
+    };
+
+    const handleCancelSubscription = async () => {
+        if (processingPayment) return;
+        setProcessingPayment(true);
+
+        try {
+            const result = await cancelSub({ userId });
+            if (result.success) {
+                showNotification("💭 Subscription canceled. You'll keep access until period ends.", "info");
+            } else {
+                showNotification(result.error || "Failed to cancel", "error");
+            }
+        } catch (error) {
+            showNotification("Error canceling subscription", "error");
         } finally {
             setProcessingPayment(false);
         }
@@ -179,6 +256,7 @@ export default function ShopScreen({ userId, onClose }) {
                             whileTap={{ scale: 0.95 }}
                         >
                             {t === "gems" && "💎 Gems"}
+                            {t === "subscriptions" && "👑 VIP"}
                             {t === "lucky" && "🎲 Lucky Line"}
                             {t === "cosmetics" && "✨ Cosmetics"}
                         </motion.button>
