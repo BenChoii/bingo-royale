@@ -324,3 +324,285 @@
     background: hsl(120, 60%, 40%);
     color: white;
 }
+
+/* Subscription Tab */
+.subscription-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.subscription-header p {
+    color: hsla(0, 0%, 100%, 0.6);
+    font-size: 0.9rem;
+}
+
+.current-subscription {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: linear-gradient(135deg, hsla(45, 100%, 50%, 0.15) 0%, hsla(35, 100%, 45%, 0.1) 100%);
+    border: 1px solid hsla(45, 100%, 50%, 0.3);
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.current-sub-badge {
+    font-size: 2.5rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.current-sub-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.sub-tier-name {
+    font-weight: 800;
+    font-size: 1rem;
+    color: hsl(45, 100%, 60%);
+}
+
+.sub-gems {
+    font-size: 0.85rem;
+    color: hsla(0, 0%, 100%, 0.8);
+}
+
+.sub-renews {
+    font-size: 0.75rem;
+    color: hsla(0, 0%, 100%, 0.5);
+}
+
+.cancel-sub-btn {
+    padding: 0.5rem 1rem;
+    background: hsla(0, 70%, 50%, 0.2);
+    border: 1px solid hsla(0, 70%, 50%, 0.4);
+    border-radius: 8px;
+    color: hsl(0, 70%, 65%);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cancel-sub-btn:hover {
+    background: hsla(0, 70%, 50%, 0.3);
+}
+
+.subscription-tiers {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.subscription-tier {
+    background: hsla(240, 20%, 15%, 0.5);
+    border: 2px solid hsla(275, 60%, 50%, 0.2);
+    border-radius: 20px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    position: relative;
+    transition: all 0.3s;
+}
+
+.subscription-tier.popular {
+    border-color: hsl(45, 100%, 50%);
+    background: linear-gradient(180deg, hsla(45, 100%, 50%, 0.1) 0%, hsla(240, 20%, 15%, 0.5) 100%);
+}
+
+.subscription-tier.current {
+    border-color: hsl(120, 60%, 50%);
+    background: linear-gradient(180deg, hsla(120, 60%, 50%, 0.1) 0%, hsla(240, 20%, 15%, 0.5) 100%);
+}
+
+.tier-emoji {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.tier-name {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0.25rem;
+}
+
+.tier-gems {
+    font-size: 1rem;
+    font-weight: 700;
+    color: hsl(45, 100%, 60%);
+    margin-bottom: 0.25rem;
+}
+
+.tier-gems span {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: hsla(0, 0%, 100%, 0.5);
+}
+
+.tier-price {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0.25rem;
+}
+
+.tier-price span {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: hsla(0, 0%, 100%, 0.5);
+}
+
+.tier-savings {
+    font-size: 0.75rem;
+    color: hsl(120, 70%, 55%);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.tier-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, hsl(275, 80%, 55%) 0%, hsl(320, 70%, 50%) 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tier-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px hsla(275, 80%, 55%, 0.4);
+}
+
+.tier-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.tier-btn.current {
+    background: linear-gradient(135deg, hsl(120, 60%, 45%) 0%, hsl(100, 60%, 35%) 100%);
+}
+
+.tier-btn.downgrade {
+    background: hsla(0, 0%, 50%, 0.3);
+}
+
+.tax-notice {
+    text-align: center;
+    padding: 1rem;
+    color: hsla(0, 0%, 100%, 0.5);
+    font-size: 0.75rem;
+}
+
+.bonus-tag {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    background: linear-gradient(135deg, hsl(120, 70%, 45%) 0%, hsl(100, 60%, 35%) 100%);
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: white;
+}
+
+/* Upgrade Prompt Modal */
+.upgrade-prompt-overlay {
+    position: fixed;
+    inset: 0;
+    background: hsla(240, 25%, 5%, 0.9);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.upgrade-prompt-modal {
+    background: linear-gradient(180deg, hsl(240, 25%, 15%) 0%, hsl(260, 30%, 10%) 100%);
+    border: 2px solid hsl(45, 100%, 50%);
+    border-radius: 24px;
+    padding: 2rem;
+    max-width: 360px;
+    text-align: center;
+}
+
+.upgrade-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.upgrade-prompt-modal h3 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: hsl(45, 100%, 60%);
+    margin-bottom: 0.5rem;
+}
+
+.upgrade-prompt-modal p {
+    color: hsla(0, 0%, 100%, 0.7);
+    margin-bottom: 0.5rem;
+}
+
+.upgrade-suggestion {
+    color: hsla(0, 0%, 100%, 0.9);
+    margin-bottom: 1.5rem;
+}
+
+.upgrade-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.upgrade-now-btn {
+    flex: 1;
+    padding: 1rem;
+    background: linear-gradient(135deg, hsl(45, 100%, 50%) 0%, hsl(35, 100%, 45%) 100%);
+    border: none;
+    border-radius: 12px;
+    color: hsl(240, 20%, 10%);
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.buy-gems-btn {
+    flex: 1;
+    padding: 1rem;
+    background: linear-gradient(135deg, hsl(275, 80%, 55%) 0%, hsl(320, 70%, 50%) 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.dismiss-btn {
+    background: transparent;
+    border: none;
+    color: hsla(0, 0%, 100%, 0.5);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.dismiss-btn:hover {
+    color: hsla(0, 0%, 100%, 0.8);
+}

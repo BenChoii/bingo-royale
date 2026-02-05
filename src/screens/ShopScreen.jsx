@@ -323,6 +323,98 @@ export default function ShopScreen({ userId, onClose }) {
                             </motion.div>
                         )}
 
+                        {tab === "subscriptions" && (
+                            <motion.div
+                                key="subscriptions"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                className="tab-content subscriptions-tab"
+                            >
+                                <div className="subscription-header">
+                                    <h3>👑 VIP Subscriptions</h3>
+                                    <p>Get 20-46% more gems per dollar + exclusive perks!</p>
+                                </div>
+
+                                {activeSubscription && (
+                                    <motion.div
+                                        className="current-subscription"
+                                        initial={{ scale: 0.9 }}
+                                        animate={{ scale: 1 }}
+                                    >
+                                        <div className="current-sub-badge">
+                                            {SUBSCRIPTION_TIERS.find(t => t.id === activeSubscription.tier)?.emoji}
+                                        </div>
+                                        <div className="current-sub-info">
+                                            <span className="sub-tier-name">
+                                                {activeSubscription.tier.toUpperCase()} Member
+                                            </span>
+                                            <span className="sub-gems">
+                                                💎 {activeSubscription.monthlyGems.toLocaleString()}/month
+                                            </span>
+                                            <span className="sub-renews">
+                                                Renews: {new Date(activeSubscription.currentPeriodEnd).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <button
+                                            className="cancel-sub-btn"
+                                            onClick={handleCancelSubscription}
+                                            disabled={processingPayment}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </motion.div>
+                                )}
+
+                                <div className="subscription-tiers">
+                                    {SUBSCRIPTION_TIERS.map((tier, idx) => {
+                                        const isCurrentTier = activeSubscription?.tier === tier.id;
+                                        const tierIndex = SUBSCRIPTION_TIERS.findIndex(t => t.id === tier.id);
+                                        const currentTierIndex = SUBSCRIPTION_TIERS.findIndex(t => t.id === activeSubscription?.tier);
+                                        const isDowngrade = activeSubscription && tierIndex < currentTierIndex;
+
+                                        return (
+                                            <motion.div
+                                                key={tier.id}
+                                                className={`subscription-tier ${tier.popular ? "popular" : ""} ${isCurrentTier ? "current" : ""}`}
+                                                whileHover={{ scale: 1.03, y: -5 }}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: idx * 0.1 }}
+                                                style={{ borderColor: tier.color }}
+                                            >
+                                                {tier.popular && <span className="popular-tag">🔥 Best Value</span>}
+                                                <div className="tier-emoji" style={{ textShadow: `0 0 20px ${tier.color}` }}>
+                                                    {tier.emoji}
+                                                </div>
+                                                <div className="tier-name">{tier.name}</div>
+                                                <div className="tier-gems">
+                                                    💎 {tier.gems.toLocaleString()}<span>/mo</span>
+                                                </div>
+                                                <div className="tier-price">
+                                                    {tier.price} CAD<span>/month</span>
+                                                </div>
+                                                <div className="tier-savings">
+                                                    Save {idx === 0 ? "20%" : idx === 1 ? "27%" : idx === 2 ? "33%" : idx === 3 ? "37%" : "46%"}
+                                                </div>
+                                                <button
+                                                    className={`tier-btn ${isCurrentTier ? "current" : isDowngrade ? "downgrade" : ""}`}
+                                                    onClick={() => handleSubscribe(tier.id)}
+                                                    disabled={processingPayment || isCurrentTier || isDowngrade}
+                                                >
+                                                    {isCurrentTier ? "✓ Current" : isDowngrade ? "Downgrade" : activeSubscription ? "Upgrade" : "Subscribe"}
+                                                </button>
+                                            </motion.div>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className="tax-notice">
+                                    <span>💰 Prices in CAD + 12% tax (GST/PST for BC)</span>
+                                </div>
+                            </motion.div>
+                        )}
+
                         {tab === "lucky" && (
                             <motion.div
                                 key="lucky"
@@ -437,6 +529,60 @@ export default function ShopScreen({ userId, onClose }) {
                         onEquip={handleEquip}
                         owned={ownedIds.has(selectedCosmetic._id)}
                     />
+                )}
+            </AnimatePresence>
+
+            {/* Upgrade Prompt Modal */}
+            <AnimatePresence>
+                {showUpgradePrompt && activeSubscription && (
+                    <motion.div
+                        className="upgrade-prompt-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setShowUpgradePrompt(false)}
+                    >
+                        <motion.div
+                            className="upgrade-prompt-modal"
+                            initial={{ scale: 0.8, y: 50 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.8, y: 50 }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="upgrade-icon">⚠️</div>
+                            <h3>Running Low on Gems!</h3>
+                            <p>You have less than 500 gems remaining.</p>
+                            <p className="upgrade-suggestion">
+                                Upgrade your <strong>{activeSubscription.tier.toUpperCase()}</strong> subscription for more gems!
+                            </p>
+                            <div className="upgrade-actions">
+                                <button
+                                    className="upgrade-now-btn"
+                                    onClick={() => {
+                                        setTab("subscriptions");
+                                        setShowUpgradePrompt(false);
+                                    }}
+                                >
+                                    👑 View Upgrades
+                                </button>
+                                <button
+                                    className="buy-gems-btn"
+                                    onClick={() => {
+                                        setTab("gems");
+                                        setShowUpgradePrompt(false);
+                                    }}
+                                >
+                                    💎 Buy Gems Now
+                                </button>
+                            </div>
+                            <button
+                                className="dismiss-btn"
+                                onClick={() => setShowUpgradePrompt(false)}
+                            >
+                                Maybe Later
+                            </button>
+                        </motion.div>
+                    </motion.div>
                 )}
             </AnimatePresence>
         </motion.div>
