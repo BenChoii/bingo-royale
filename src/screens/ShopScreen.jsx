@@ -4,6 +4,7 @@ import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useNotification } from "../components/Notifications";
 import CosmeticPreview from "../components/CosmeticPreview";
+import { useGemSpendAnimation } from "../components/GemSpendAnimation";
 import "./ShopScreen.css";
 
 // Stripe gem packages
@@ -53,6 +54,7 @@ export default function ShopScreen({ userId, onClose }) {
     const [tab, setTab] = useState("gems");
     const [selectedCosmetic, setSelectedCosmetic] = useState(null);
     const { showNotification } = useNotification();
+    const { triggerSpend, SpendAnimation } = useGemSpendAnimation();
 
     const cosmetics = useQuery(api.cosmetics.getAllCosmetics);
     const userCosmetics = useQuery(api.cosmetics.getUserCosmetics, userId ? { userId } : "skip");
@@ -201,16 +203,26 @@ export default function ShopScreen({ userId, onClose }) {
     const handleStartLucky = async () => {
         const result = await startLuckyLine({ userId });
         if (result.success) {
-            showNotification("Lucky Line started! Draw your lines!", "success");
+            // Trigger gem spend animation for 500 gems
+            triggerSpend(500);
+            showNotification("🎲 Lucky Line started! Draw your lines!", "success");
         } else {
             showNotification(result.error, "error");
         }
     };
 
     const handlePurchase = async (cosmeticId) => {
+        // Find cosmetic price for animation
+        const cosmetic = cosmetics?.find(c => c._id === cosmeticId);
+        const price = cosmetic?.price || 0;
+
         const result = await purchaseCosmetic({ userId, cosmeticId });
         if (result.success) {
-            showNotification(`Purchased ${result.cosmetic.name}!`, "success");
+            // Trigger gem spend animation
+            if (price > 0) {
+                triggerSpend(price);
+            }
+            showNotification(`✨ Purchased ${result.cosmetic.name}!`, "success");
         } else {
             showNotification(result.error, "error");
         }
@@ -585,6 +597,9 @@ export default function ShopScreen({ userId, onClose }) {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Gem Spend Animation */}
+            <SpendAnimation />
         </motion.div>
     );
 }
