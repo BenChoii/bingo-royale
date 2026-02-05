@@ -326,6 +326,148 @@
     cursor: not-allowed;
 }
 
+/* Animal badge */
+.animal-badge {
+    background: hsl(30, 50%, 35%);
+    color: hsl(40, 80%, 85%);
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+/* Fertilized plot */
+.farm-plot.fertilized {
+    border-color: hsl(35, 60%, 40%);
+    box-shadow: 0 0 8px hsla(35, 80%, 50%, 0.4);
+}
+
+.fertilized-icon {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    font-size: 0.7rem;
+}
+
+/* Animals inline display */
+.animals-inline {
+    display: flex;
+    gap: 4px;
+    padding: 4px 8px;
+    background: hsla(30, 40%, 20%, 0.8);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1.1rem;
+}
+
+.animals-inline:hover {
+    background: hsla(30, 50%, 25%, 0.9);
+    transform: scale(1.05);
+}
+
+.animals-inline span {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+/* Farm tabs */
+.farm-tabs {
+    display: flex;
+    gap: 4px;
+    margin-right: 12px;
+}
+
+.farm-tab {
+    padding: 4px 10px;
+    background: hsla(80, 20%, 15%, 0.6);
+    border: 1px solid hsla(80, 30%, 30%, 0.5);
+    border-radius: 6px;
+    color: hsl(80, 40%, 60%);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.farm-tab:hover {
+    background: hsla(80, 30%, 20%, 0.8);
+}
+
+.farm-tab.active {
+    background: hsla(80, 40%, 25%, 0.9);
+    border-color: hsl(80, 50%, 40%);
+    color: hsl(80, 60%, 75%);
+}
+
+/* Farm controls */
+.farm-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+/* Collect button */
+.collect-btn {
+    padding: 6px 12px;
+    background: linear-gradient(135deg, hsl(30, 60%, 35%), hsl(40, 50%, 30%));
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.collect-btn:hover {
+    background: linear-gradient(135deg, hsl(30, 70%, 40%), hsl(40, 60%, 35%));
+    transform: scale(1.05);
+}
+
+/* Farm shop */
+.farm-shop {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex: 1;
+    max-height: 60px;
+    overflow-y: auto;
+}
+
+.shop-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 8px;
+    background: hsla(80, 20%, 15%, 0.8);
+    border: 1px solid hsla(80, 30%, 30%, 0.5);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 48px;
+}
+
+.shop-item:hover {
+    background: hsla(80, 30%, 20%, 0.9);
+    border-color: hsl(80, 50%, 40%);
+    transform: scale(1.05);
+}
+
+.shop-emoji {
+    font-size: 1.2rem;
+}
+
+.shop-cost {
+    font-size: 0.65rem;
+    color: hsl(50, 80%, 60%);
+    font-weight: 600;
+}
+
 /* Mobile adjustments */
 @media (max-width: 768px) {
     .bingo-farm.collapsed {

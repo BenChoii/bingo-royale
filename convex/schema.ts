@@ -269,12 +269,29 @@ export default defineSchema({
             plantedAt: v.optional(v.number()),
             growTime: v.optional(v.number()), // ms to mature
             isReady: v.boolean(),
+            fertilized: v.optional(v.boolean()), // 2x yield
         })),
         plotCount: v.number(), // How many plots unlocked (4-12)
         helpers: v.object({
             chicken: v.number(), // Auto-harvest count
             farmBot: v.boolean(), // Auto-replant
             sprinkler: v.boolean(), // 25% faster growth
+        }),
+        // Animals - passive gem producers
+        animals: v.object({
+            chickens: v.number(), // 1 gem/min each
+            ducks: v.number(), // 2 gems/min each  
+            sheep: v.number(), // 5 gems/min each
+            cows: v.number(), // 10 gems/min each
+            pigs: v.number(), // 15 gems/min each
+        }),
+        lastAnimalCollect: v.optional(v.number()), // When animals last collected
+        // Inventory - consumables
+        inventory: v.object({
+            seeds: v.number(), // Basic seeds
+            fertilizer: v.number(), // 2x yield boost
+            superFertilizer: v.number(), // 3x yield + instant grow
+            waterCan: v.number(), // Speed up one crop by 50%
         }),
         farmLevel: v.number(),
         farmXp: v.number(),

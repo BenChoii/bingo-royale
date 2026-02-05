@@ -78,16 +78,29 @@ export const initializeFarm = mutation({
         const farmId = await ctx.db.insert("farms", {
             userId: args.userId,
             plots: [
-                { cropType: undefined, plantedAt: undefined, growTime: undefined, isReady: false },
-                { cropType: undefined, plantedAt: undefined, growTime: undefined, isReady: false },
-                { cropType: undefined, plantedAt: undefined, growTime: undefined, isReady: false },
-                { cropType: undefined, plantedAt: undefined, growTime: undefined, isReady: false },
+                { cropType: undefined, plantedAt: undefined, growTime: undefined, isReady: false, fertilized: false },
+                { cropType: undefined, plantedAt: undefined, growTime: undefined, isReady: false, fertilized: false },
+                { cropType: undefined, plantedAt: undefined, growTime: undefined, isReady: false, fertilized: false },
+                { cropType: undefined, plantedAt: undefined, growTime: undefined, isReady: false, fertilized: false },
             ],
             plotCount: 4,
             helpers: {
                 chicken: 0,
                 farmBot: false,
                 sprinkler: false,
+            },
+            animals: {
+                chickens: 0,
+                ducks: 0,
+                sheep: 0,
+                cows: 0,
+                pigs: 0,
+            },
+            inventory: {
+                seeds: 5, // Start with 5 free seeds
+                fertilizer: 0,
+                superFertilizer: 0,
+                waterCan: 0,
             },
             farmLevel: 1,
             farmXp: 0,
@@ -130,9 +143,9 @@ export const plantCrop = mutation({
 
         // Check if plot is empty
         const plot = farm.plots[args.plotIndex];
-        if (plot.cropType) {
-            return { success: false, error: "Plot is not empty" };
-        }
+
+        // Allow planting on empty plots OR changing existing crops
+        // (changing a crop before it's ready loses progress)
 
         // Plant the crop
         const updatedPlots = [...farm.plots];
@@ -141,11 +154,12 @@ export const plantCrop = mutation({
             plantedAt: Date.now(),
             growTime: crop.growTime,
             isReady: false,
+            fertilized: false,
         };
 
         await ctx.db.patch(farm._id, { plots: updatedPlots });
 
-        return { success: true, crop: crop.emoji };
+        return { success: true, crop: crop.emoji, replaced: !!plot.cropType };
     },
 });
 
@@ -184,26 +198,20 @@ export const harvestCrops = mutation({
                     // Harvest this crop
                     const crop = CROPS[plot.cropType as keyof typeof CROPS];
                     if (crop) {
-                        totalGems += crop.gemYield;
+                        // Apply fertilizer bonus
+                        const yieldMultiplier = plot.fertilized ? 2 : 1;
+                        totalGems += crop.gemYield * yieldMultiplier;
                         totalXp += crop.xp;
                         harvestCount++;
                     }
 
-                    // Clear the plot (or auto-replant if farmBot)
-                    if (farm.helpers.farmBot) {
-                        return {
-                            ...plot,
-                            plantedAt: now,
-                            isReady: false,
-                        };
-                    } else {
-                        return {
-                            cropType: undefined,
-                            plantedAt: undefined,
-                            growTime: undefined,
-                            isReady: false,
-                        };
-                    }
+                    // Auto-replant the same crop (reset timer, clear fertilized)
+                    return {
+                        ...plot,
+                        plantedAt: now,
+                        isReady: false,
+                        fertilized: false,
+                    };
                 }
             }
             return plot;
@@ -328,5 +336,185 @@ export const getAvailableCrops = query({
                 id: key,
                 ...crop,
             }));
+    },
+});
+
+// ========== FARM SHOP ==========
+
+// Shop item definitions
+export const SHOP_ITEMS = {
+    // Seeds & Consumables
+    seedPack: { name: "Seed Pack", emoji: "🌱", cost: 10, type: "consumable", gives: { seeds: 10 } },
+    fertilizer: { name: "Fertilizer", emoji: "💩", cost: 25, type: "consumable", gives: { fertilizer: 5 } },
+    superFertilizer: { name: "Super Fertilizer", emoji: "✨", cost: 100, type: "consumable", gives: { superFertilizer: 2 } },
+    waterCan: { name: "Watering Can", emoji: "💧", cost: 50, type: "consumable", gives: { waterCan: 3 } },
+
+    // Animals - passive gem producers
+    chicken: { name: "Chicken", emoji: "🐔", cost: 100, type: "animal", animal: "chickens", gemsPerMin: 1 },
+    duck: { name: "Duck", emoji: "🦆", cost: 200, type: "animal", animal: "ducks", gemsPerMin: 2 },
+    sheep: { name: "Sheep", emoji: "🐑", cost: 500, type: "animal", animal: "sheep", gemsPerMin: 5 },
+    cow: { name: "Cow", emoji: "🐄", cost: 1000, type: "animal", animal: "cows", gemsPerMin: 10 },
+    pig: { name: "Pig", emoji: "🐷", cost: 2000, type: "animal", animal: "pigs", gemsPerMin: 15 },
+
+    // Upgrades
+    sprinkler: { name: "Sprinkler", emoji: "💦", cost: 1500, type: "upgrade", upgrade: "sprinkler" },
+    farmBot: { name: "Farm Bot", emoji: "🤖", cost: 5000, type: "upgrade", upgrade: "farmBot" },
+};
+
+// Get shop items
+export const getShopItems = query({
+    args: {},
+    handler: async () => {
+        return Object.entries(SHOP_ITEMS).map(([id, item]) => ({ id, ...item }));
+    },
+});
+
+// Buy shop item
+export const buyShopItem = mutation({
+    args: {
+        userId: v.id("users"),
+        itemId: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const item = SHOP_ITEMS[args.itemId as keyof typeof SHOP_ITEMS];
+        if (!item) return { success: false, error: "Unknown item" };
+
+        const user = await ctx.db.get(args.userId);
+        if (!user) return { success: false, error: "User not found" };
+
+        if (user.coins < item.cost) {
+            return { success: false, error: `Need ${item.cost} Gems` };
+        }
+
+        const farm = await ctx.db
+            .query("farms")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .first();
+
+        if (!farm) return { success: false, error: "No farm found" };
+
+        // Deduct gems
+        await ctx.db.patch(args.userId, { coins: user.coins - item.cost });
+
+        // Apply item effect
+        if (item.type === "consumable" && "gives" in item) {
+            const newInventory = { ...farm.inventory };
+            for (const [key, amount] of Object.entries(item.gives)) {
+                newInventory[key as keyof typeof newInventory] += amount as number;
+            }
+            await ctx.db.patch(farm._id, { inventory: newInventory });
+        } else if (item.type === "animal" && "animal" in item) {
+            const newAnimals = { ...farm.animals };
+            newAnimals[item.animal as keyof typeof newAnimals] += 1;
+            await ctx.db.patch(farm._id, { animals: newAnimals });
+        } else if (item.type === "upgrade" && "upgrade" in item) {
+            // Handle upgrade items (sprinkler, farmBot)
+            if (item.upgrade === "sprinkler") {
+                await ctx.db.patch(farm._id, { helpers: { ...farm.helpers, sprinkler: true } });
+            } else if (item.upgrade === "farmBot") {
+                await ctx.db.patch(farm._id, { helpers: { ...farm.helpers, farmBot: true } });
+            }
+        }
+
+        return { success: true, item: item.emoji };
+    },
+});
+
+// Collect gems from animals
+export const collectAnimalGems = mutation({
+    args: { userId: v.id("users") },
+    handler: async (ctx, args) => {
+        const farm = await ctx.db
+            .query("farms")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .first();
+
+        if (!farm) return { success: false, error: "No farm found" };
+
+        const now = Date.now();
+        const lastCollect = farm.lastAnimalCollect || farm.createdAt;
+        const minutesPassed = Math.min(60, (now - lastCollect) / 60000); // Cap at 60 min
+
+        if (minutesPassed < 1) {
+            return { success: false, error: "Animals need more time" };
+        }
+
+        // Calculate gems from each animal type
+        const gemsFromAnimals = Math.floor(
+            (farm.animals.chickens * 1 +
+                farm.animals.ducks * 2 +
+                farm.animals.sheep * 5 +
+                farm.animals.cows * 10 +
+                farm.animals.pigs * 15) * minutesPassed
+        );
+
+        if (gemsFromAnimals === 0) {
+            return { success: false, error: "No animals to collect from" };
+        }
+
+        const user = await ctx.db.get(args.userId);
+        if (!user) return { success: false, error: "User not found" };
+
+        await ctx.db.patch(args.userId, { coins: user.coins + gemsFromAnimals });
+        await ctx.db.patch(farm._id, {
+            lastAnimalCollect: now,
+            totalGemsEarned: farm.totalGemsEarned + gemsFromAnimals,
+        });
+
+        return {
+            success: true,
+            gemsEarned: gemsFromAnimals,
+            minutesPassed: Math.floor(minutesPassed),
+        };
+    },
+});
+
+// Use fertilizer on a plot
+export const useFertilizer = mutation({
+    args: {
+        userId: v.id("users"),
+        plotIndex: v.number(),
+        type: v.string(), // "fertilizer" or "superFertilizer"
+    },
+    handler: async (ctx, args) => {
+        const farm = await ctx.db
+            .query("farms")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .first();
+
+        if (!farm) return { success: false, error: "No farm found" };
+
+        const inventoryKey = args.type as "fertilizer" | "superFertilizer";
+        if (farm.inventory[inventoryKey] <= 0) {
+            return { success: false, error: `No ${args.type} in inventory` };
+        }
+
+        const plot = farm.plots[args.plotIndex];
+        if (!plot || !plot.cropType) {
+            return { success: false, error: "No crop in this plot" };
+        }
+
+        if (plot.fertilized) {
+            return { success: false, error: "Already fertilized" };
+        }
+
+        // Update plot and inventory
+        const updatedPlots = [...farm.plots];
+        updatedPlots[args.plotIndex] = { ...plot, fertilized: true };
+
+        // Super fertilizer = instant ready
+        if (args.type === "superFertilizer") {
+            updatedPlots[args.plotIndex].isReady = true;
+        }
+
+        const newInventory = { ...farm.inventory };
+        newInventory[inventoryKey] -= 1;
+
+        await ctx.db.patch(farm._id, {
+            plots: updatedPlots,
+            inventory: newInventory,
+        });
+
+        return { success: true };
     },
 });
