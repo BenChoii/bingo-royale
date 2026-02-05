@@ -9,6 +9,239 @@ const BOSS_CONFIG = {
     4: { name: "Void Titan 🌑", wager: 2500, multiplier: 5, health: 300, duration: 30000 },
 };
 
+const SELECTION_TIMEOUT = 10000; // 10 seconds to reach consensus
+
+// ===== COORDINATED BOSS SELECTION =====
+
+// Get current selection phase state (for real-time UI)
+export const getBossSelectionPhase = query({
+    args: { roomId: v.id("rooms") },
+    handler: async (ctx, args) => {
+        const phase = await ctx.db
+            .query("bossSelectionPhase")
+            .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+            .order("desc")
+            .first();
+
+        if (!phase || phase.status === "expired") {
+            return null;
+        }
+
+        // Check if expired but not yet marked
+        if (phase.status === "selecting" && Date.now() > phase.expiresAt) {
+            return { ...phase, status: "expired" as const };
+        }
+
+        return phase;
+    },
+});
+
+// Player votes for a boss
+export const selectBossVote = mutation({
+    args: {
+        roomId: v.id("rooms"),
+        odId: v.id("users"),
+        bossLevel: v.number(),
+    },
+    handler: async (ctx, args) => {
+        const user = await ctx.db.get(args.odId);
+        if (!user) return { success: false, error: "User not found" };
+
+        const room = await ctx.db.get(args.roomId);
+        if (!room || room.status !== "finished") {
+            return { success: false, error: "Boss selection only available after Bingo ends!" };
+        }
+
+        const config = BOSS_CONFIG[args.bossLevel as keyof typeof BOSS_CONFIG];
+        if (!config) return { success: false, error: "Invalid boss level" };
+
+        // Check if user can afford this boss
+        if (user.coins < config.wager) {
+            return { success: false, error: `Need ${config.wager} Gems for ${config.name}!` };
+        }
+
+        // Get or create selection phase
+        let phase = await ctx.db
+            .query("bossSelectionPhase")
+            .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+            .filter((q) => q.eq(q.field("status"), "selecting"))
+            .first();
+
+        const now = Date.now();
+
+        // Check if phase expired
+        if (phase && now > phase.expiresAt) {
+            await ctx.db.patch(phase._id, { status: "expired" });
+            return { success: false, error: "Selection time expired! Boss escaped." };
+        }
+
+        if (!phase) {
+            // First vote starts the timer
+            const phaseId = await ctx.db.insert("bossSelectionPhase", {
+                roomId: args.roomId,
+                status: "selecting",
+                expiresAt: now + SELECTION_TIMEOUT,
+                playerVotes: [{
+                    odId: args.odId,
+                    userName: user.name,
+                    userAvatar: user.avatar,
+                    bossLevel: args.bossLevel,
+                    votedAt: now,
+                }],
+                createdAt: now,
+            });
+            phase = await ctx.db.get(phaseId);
+        } else {
+            // Update existing vote or add new one
+            const existingVotes = phase.playerVotes.filter(v => v.odId !== args.odId);
+            const newVotes = [...existingVotes, {
+                odId: args.odId,
+                userName: user.name,
+                userAvatar: user.avatar,
+                bossLevel: args.bossLevel,
+                votedAt: now,
+            }];
+
+            await ctx.db.patch(phase._id, { playerVotes: newVotes });
+            phase = await ctx.db.get(phase._id);
+        }
+
+        if (!phase) return { success: false, error: "Failed to update selection" };
+
+        // Check for consensus - all room players voted for same boss
+        const roomPlayers = await ctx.db
+            .query("roomPlayers")
+            .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+            .filter((q) => q.neq(q.field("isBot"), true))
+            .collect();
+
+        const humanPlayerIds: Array<typeof args.odId> = roomPlayers
+            .map(p => p.odId)
+            .filter((id): id is typeof args.odId => id !== undefined);
+        const votes = phase.playerVotes;
+
+        // All humans voted?
+        const allVoted = humanPlayerIds.every(pid =>
+            votes.some(v => v.odId === pid)
+        );
+
+        if (allVoted && votes.length > 0) {
+            // Check if all voted for same boss
+            const firstBoss = votes[0].bossLevel;
+            const allSame = votes.every(v => v.bossLevel === firstBoss);
+
+            if (allSame) {
+                // CONSENSUS REACHED! Auto-start the battle
+                const consensusConfig = BOSS_CONFIG[firstBoss as keyof typeof BOSS_CONFIG];
+
+                // Verify all players can afford it
+                const playerUsers = await Promise.all(humanPlayerIds.map(id => ctx.db.get(id)));
+                const allCanAfford = playerUsers.every(u => u && u.coins >= consensusConfig.wager);
+
+                if (!allCanAfford) {
+                    return { success: false, error: "Not all players can afford this boss!" };
+                }
+
+                // Mark phase as starting
+                await ctx.db.patch(phase._id, {
+                    status: "starting",
+                    consensusBoss: firstBoss,
+                });
+
+                // Deduct wagers from all players
+                for (const pUser of playerUsers) {
+                    if (pUser) {
+                        await ctx.db.patch(pUser._id, { coins: pUser.coins - consensusConfig.wager });
+                    }
+                }
+
+                // Create the boss game
+                const bossGameId = await ctx.db.insert("bossGames", {
+                    roomId: args.roomId,
+                    bossLevel: firstBoss,
+                    health: consensusConfig.health,
+                    maxHealth: consensusConfig.health,
+                    status: "active",
+                    totalWager: consensusConfig.wager * humanPlayerIds.length,
+                    participants: humanPlayerIds,
+                    calledNumbers: [],
+                    startedAt: now,
+                    expiresAt: now + consensusConfig.duration,
+                    damageEvents: [],
+                });
+
+                // Create individual battle entries
+                for (const pId of humanPlayerIds) {
+                    await ctx.db.insert("bossBattles", {
+                        userId: pId,
+                        roomId: args.roomId,
+                        bossGameId,
+                        wager: consensusConfig.wager,
+                        reward: 0,
+                        status: "pending",
+                        bossLevel: firstBoss,
+                        createdAt: now,
+                    });
+                }
+
+                // Give all players fresh cards
+                for (const player of roomPlayers) {
+                    await ctx.db.patch(player._id, {
+                        card: generateBingoCard(),
+                        daubedCount: 1,
+                        distanceToBingo: 4,
+                    });
+                }
+
+                // System message
+                await ctx.db.insert("messages", {
+                    roomId: args.roomId,
+                    userId: args.odId,
+                    userName: "System",
+                    userAvatar: "⚔️",
+                    content: `CONSENSUS REACHED! All ${humanPlayerIds.length} players unite to battle ${consensusConfig.name}!`,
+                    type: "system",
+                    createdAt: now,
+                });
+
+                return { success: true, consensus: true, bossLevel: firstBoss };
+            }
+        }
+
+        return { success: true, consensus: false };
+    },
+});
+
+// Check and expire stale selection phases (called periodically)
+export const checkSelectionExpiry = mutation({
+    args: { roomId: v.id("rooms") },
+    handler: async (ctx, args) => {
+        const phase = await ctx.db
+            .query("bossSelectionPhase")
+            .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+            .filter((q) => q.eq(q.field("status"), "selecting"))
+            .first();
+
+        if (phase && Date.now() > phase.expiresAt) {
+            await ctx.db.patch(phase._id, { status: "expired" });
+
+            // System message
+            await ctx.db.insert("messages", {
+                roomId: args.roomId,
+                userName: "System",
+                userAvatar: "💨",
+                content: `The boss escaped! Players couldn't agree in time.`,
+                type: "system",
+                createdAt: Date.now(),
+            });
+
+            return { expired: true };
+        }
+
+        return { expired: false };
+    },
+});
+
 // 1. Players wager to "Ready Up" for the boss
 export const joinBossBattle = mutation({
     args: {
@@ -184,9 +417,28 @@ export const daubBossNumber = mutation({
 
         if (!player) return { success: false, error: "Player not found" };
 
+        // Get user info for damage event
+        const user = await ctx.db.get(args.userId);
+        if (!user) return { success: false, error: "User not found" };
+
         // Reduce boss health
         const newHealth = Math.max(0, bossGame.health - 1);
-        await ctx.db.patch(bossGame._id, { health: newHealth });
+
+        // Track damage event for animations
+        const damageEvent = {
+            odId: args.userId,
+            userName: user.name,
+            userAvatar: user.avatar,
+            damage: 1,
+            timestamp: Date.now(),
+        };
+
+        // Keep only last 10 damage events for performance
+        const recentEvents = (bossGame.damageEvents || []).slice(-9);
+        await ctx.db.patch(bossGame._id, {
+            health: newHealth,
+            damageEvents: [...recentEvents, damageEvent],
+        });
 
         // Update player card
         let updated = false;
@@ -309,7 +561,26 @@ export const bossCallNumber = mutation({
                 const user = await ctx.db.get(targetId);
                 const targetName = user?.name || "a player";
 
-                if (attackType === "freeze") {
+                // Check if player has an active shield
+                const hasShield = targetPlayer.shieldUntil && targetPlayer.shieldUntil > Date.now();
+
+                if (hasShield) {
+                    // Shield blocks the attack!
+                    // Consume the shield (set to expired)
+                    await ctx.db.patch(targetPlayer._id, {
+                        shieldUntil: 0,
+                    });
+
+                    await ctx.db.insert("messages", {
+                        roomId: args.roomId,
+                        userId: targetId,
+                        userName: "System",
+                        userAvatar: "🛡️",
+                        content: `BLOCKED! ${targetName}'s shield absorbed the ${attackType === "freeze" ? "Ice Nova 🧊" : "Chaos Scramble 🌀"}!`,
+                        type: "system",
+                        createdAt: Date.now(),
+                    });
+                } else if (attackType === "freeze") {
                     await ctx.db.patch(targetPlayer._id, {
                         frozenUntil: Date.now() + 5000, // 5 second freeze
                     });
@@ -369,12 +640,29 @@ export const bossCallNumber = mutation({
 export const getActiveBoss = query({
     args: { roomId: v.id("rooms") },
     handler: async (ctx, args) => {
-        return await ctx.db
+        const bossGame = await ctx.db
             .query("bossGames")
             .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
-            .filter((q) => q.neq(q.field("status"), "won")) // optional: keep it for a while?
             .order("desc")
             .first();
+
+        if (!bossGame) return null;
+
+        // Only return boss if it's actively relevant:
+        // - "preparing" or "active" -> always show
+        // - "won" or "lost" -> only show if finished recently (within 60s) for the result screen
+        if (bossGame.status === "preparing" || bossGame.status === "active") {
+            return bossGame;
+        }
+
+        // For won/lost, check if it was recent (show result briefly)
+        const isRecent = bossGame.expiresAt && (Date.now() - bossGame.expiresAt) < 60000;
+        if (isRecent) {
+            return bossGame;
+        }
+
+        // Otherwise, don't show stale boss results
+        return null;
     },
 });
 

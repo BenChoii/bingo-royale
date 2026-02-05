@@ -95,6 +95,15 @@ export default function GameScreen({ userId, roomId, onLeave }) {
     const bossCallNumber = useMutation(api.boss.bossCallNumber);
     const useBossPowerup = useMutation(api.boss.useBossPowerup);
     const claimDailyReward = useMutation(api.daily.claimDailyReward);
+    const selectBossVote = useMutation(api.boss.selectBossVote);
+    const checkSelectionExpiry = useMutation(api.boss.checkSelectionExpiry);
+
+    // Boss selection phase query
+    const bossSelectionPhase = useQuery(api.boss.getBossSelectionPhase, { roomId });
+
+    // Track displayed damage events to prevent re-animating
+    const [displayedDamageIds, setDisplayedDamageIds] = useState(new Set());
+    const [floatingDamage, setFloatingDamage] = useState([]); // [{id, userName, avatar, damage, x, y}]
 
     const handleTopUp = async () => {
         const result = await claimDailyReward({ userId });
@@ -284,6 +293,63 @@ export default function GameScreen({ userId, roomId, onLeave }) {
             showNotification(result.error, "error");
         }
     };
+
+    // Handle voting for a boss
+    const handleVoteBoss = async (level) => {
+        const result = await selectBossVote({ roomId, odId: userId, bossLevel: level });
+        if (!result.success) {
+            showNotification(result.error, "error");
+        } else if (result.consensus) {
+            showNotification(`Battle starting! 💥`, "success");
+        }
+    };
+
+    // Check selection phase expiry periodically
+    useEffect(() => {
+        if (!bossSelectionPhase || bossSelectionPhase.status !== "selecting") return;
+
+        const interval = setInterval(() => {
+            checkSelectionExpiry({ roomId });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [bossSelectionPhase?.status, roomId, checkSelectionExpiry]);
+
+    // Damage animation effect - triggers floating damage numbers
+    useEffect(() => {
+        if (!activeBoss?.damageEvents) return;
+
+        const newEvents = activeBoss.damageEvents.filter(
+            ev => !displayedDamageIds.has(ev.timestamp)
+        );
+
+        if (newEvents.length > 0) {
+            // Mark these as displayed
+            const newIds = new Set(displayedDamageIds);
+            newEvents.forEach(ev => newIds.add(ev.timestamp));
+            setDisplayedDamageIds(newIds);
+
+            // Create floating damage numbers
+            const newFloaters = newEvents.map(ev => ({
+                id: ev.timestamp,
+                userName: ev.userName,
+                avatar: ev.userAvatar,
+                damage: ev.damage,
+                isMine: ev.odId === userId,
+                x: 50 + (Math.random() - 0.5) * 30, // Random x position (%)
+                y: 30 + Math.random() * 20, // Random y position (%)
+            }));
+
+            setFloatingDamage(prev => [...prev, ...newFloaters]);
+
+            // Remove after animation completes
+            setTimeout(() => {
+                setFloatingDamage(prev =>
+                    prev.filter(f => !newEvents.some(ev => ev.timestamp === f.id))
+                );
+            }, 2000);
+        }
+    }, [activeBoss?.damageEvents, displayedDamageIds, userId]);
 
     // Host handles boss number calls
     useEffect(() => {
@@ -802,9 +868,23 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                                     </div>
                                     <div className="boss-hp-bar">
                                         <div
-                                            className="boss-hp-fill"
+                                            className={`boss-hp-fill ${floatingDamage.length > 0 ? 'shake' : ''}`}
                                             style={{ width: `${(activeBoss.health / activeBoss.maxHealth) * 100}%` }}
                                         />
+                                    </div>
+
+                                    {/* Floating Damage Numbers */}
+                                    <div className="floating-damage-container">
+                                        {floatingDamage.map(dmg => (
+                                            <div
+                                                key={dmg.id}
+                                                className={`floating-damage ${dmg.isMine ? 'is-mine' : 'is-teammate'}`}
+                                                style={{ left: `${dmg.x}%`, top: `${dmg.y}%` }}
+                                            >
+                                                <span className="damage-avatar">{dmg.avatar}</span>
+                                                <span className="damage-number">-{dmg.damage}</span>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                                 <div className="boss-numbers-active">
@@ -916,35 +996,73 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                                 🎉 BINGO!
                             </button>
                         )}
-                        {isFinished && (!activeBoss || activeBoss?.status === "preparing") && (
+                        {isFinished && (!activeBoss?.status || activeBoss?.status === "lost" || activeBoss?.status === "won") && (
                             <div className="boss-battle-selection">
-                                {[
-                                    { level: 1, icon: "👹", name: "Slime King", wager: 100, prize: 300 },
-                                    { level: 2, icon: "🗿", name: "Giga Golem", wager: 250, prize: 875 },
-                                    { level: 3, icon: "🐲", name: "Fire Drake", wager: 500, prize: 2000 },
-                                    { level: 4, icon: "🌑", name: "Void Titan", wager: 2500, prize: 12500 },
-                                ].map(boss => {
-                                    const isJoined = activeBoss?.participants?.includes(userId);
-                                    return (
-                                        <button
-                                            key={boss.level}
-                                            className={`boss-btn ${isJoined ? 'is-joined' : ''}`}
-                                            onClick={() => !isJoined && handleJoinBoss(boss.level)}
-                                            disabled={(user?.coins || 0) < boss.wager && !isJoined}
-                                        >
-                                            <span className="boss-icon">{boss.icon}</span>
-                                            <span className="boss-name">{boss.name}</span>
-                                            <span className="boss-wager">{isJoined ? 'READY! ✅' : `Wager: ${boss.wager} 💎`}</span>
-                                            <span className="boss-reward">Win {boss.prize}+!</span>
-                                        </button>
-                                    );
-                                })}
+                                {/* Timer bar - shows when selection phase is active */}
+                                {bossSelectionPhase?.status === "selecting" && (
+                                    <div className="selection-timer-bar">
+                                        <div
+                                            className="timer-fill"
+                                            style={{
+                                                width: `${Math.max(0, ((bossSelectionPhase.expiresAt - now) / 10000) * 100)}%`
+                                            }}
+                                        />
+                                        <span className="timer-text">
+                                            ⏳ {Math.max(0, Math.ceil((bossSelectionPhase.expiresAt - now) / 1000))}s to agree!
+                                        </span>
+                                    </div>
+                                )}
+
+                                <h3 className="selection-title">🎯 Choose Your Challenge Together!</h3>
+                                <p className="selection-subtitle">All players must select the same boss within 10 seconds</p>
+
+                                <div className="boss-vote-grid">
+                                    {[
+                                        { level: 1, icon: "👹", name: "Slime King", wager: 100, prize: 300 },
+                                        { level: 2, icon: "🗿", name: "Giga Golem", wager: 250, prize: 875 },
+                                        { level: 3, icon: "🐲", name: "Fire Drake", wager: 500, prize: 2000 },
+                                        { level: 4, icon: "🌑", name: "Void Titan", wager: 2500, prize: 12500 },
+                                    ].map(boss => {
+                                        const myVote = bossSelectionPhase?.playerVotes?.find(v => v.odId === userId)?.bossLevel;
+                                        const isMyVote = myVote === boss.level;
+                                        const votesForThis = bossSelectionPhase?.playerVotes?.filter(v => v.bossLevel === boss.level) || [];
+                                        const canAfford = (user?.coins || 0) >= boss.wager;
+
+                                        return (
+                                            <button
+                                                key={boss.level}
+                                                className={`boss-vote-btn ${isMyVote ? 'is-my-vote' : ''} ${votesForThis.length > 0 ? 'has-votes' : ''}`}
+                                                onClick={() => handleVoteBoss(boss.level)}
+                                                disabled={!canAfford}
+                                            >
+                                                <span className="boss-icon">{boss.icon}</span>
+                                                <span className="boss-name">{boss.name}</span>
+                                                <span className="boss-wager">{boss.wager} 💎</span>
+                                                <span className="boss-reward">Win {boss.prize}+</span>
+
+                                                {/* Show who voted for this boss */}
+                                                {votesForThis.length > 0 && (
+                                                    <div className="vote-avatars">
+                                                        {votesForThis.map(v => (
+                                                            <span key={v.odId} className="vote-avatar" title={v.userName}>
+                                                                {v.userAvatar}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {isMyVote && <span className="your-vote-badge">YOUR VOTE</span>}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {bossSelectionPhase?.status === "expired" && (
+                                    <div className="selection-expired">
+                                        💨 Time's up! The boss escaped...
+                                    </div>
+                                )}
                             </div>
-                        )}
-                        {isFinished && activeBoss?.status === "preparing" && (
-                            <button className="btn btn-accent btn-large animate-pulse" onClick={handleStartBossAction}>
-                                ⚔️ START BOSS RAID
-                            </button>
                         )}
                         {isFinished && (
                             <button className="btn btn-primary btn-large btn-replay" onClick={handleStartGame}>

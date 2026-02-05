@@ -151,6 +151,34 @@ export default defineSchema({
         startedAt: v.optional(v.number()),
         expiresAt: v.optional(v.number()),
         calledNumbers: v.array(v.number()),
+        // Damage events for animations
+        damageEvents: v.optional(v.array(v.object({
+            odId: v.id("users"),
+            userName: v.string(),
+            userAvatar: v.string(),
+            damage: v.number(),
+            timestamp: v.number(),
+        }))),
+    }).index("by_room", ["roomId"]),
+
+    // Boss Selection Phase (Coordinated voting before battle)
+    bossSelectionPhase: defineTable({
+        roomId: v.id("rooms"),
+        status: v.union(
+            v.literal("selecting"),  // Players voting
+            v.literal("starting"),   // Consensus reached, starting battle
+            v.literal("expired")     // Timer ran out without consensus
+        ),
+        expiresAt: v.number(),       // 10 second countdown
+        playerVotes: v.array(v.object({
+            odId: v.id("users"),
+            userName: v.string(),
+            userAvatar: v.string(),
+            bossLevel: v.number(),
+            votedAt: v.number(),
+        })),
+        consensusBoss: v.optional(v.number()), // Set when all agree
+        createdAt: v.number(),
     }).index("by_room", ["roomId"]),
 
     // Boss Battle Participation (Individual entries)
