@@ -170,7 +170,6 @@ export const createSubscriptionCheckout = action({
             // Enable automatic tax for BC, Canada
             automatic_tax: { enabled: true },
             tax_id_collection: { enabled: true },
-            customer_creation: "always",
             success_url: `${args.successUrl}?session_id={CHECKOUT_SESSION_ID}&tier=${args.tier}&type=subscription`,
             cancel_url: args.cancelUrl,
             metadata: {
