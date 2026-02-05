@@ -75,6 +75,7 @@ export default function GameScreen({ userId, roomId, onLeave }) {
     const recentPowerups = useQuery(api.powerups.getRecentPowerups,
         gameState?._id ? { gameId: gameState._id } : "skip"
     );
+    const activeBoss = useQuery(api.boss.getActiveBoss, { roomId });
 
     const isHost = roomDetails?.hostId === userId;
     const isPlaying = roomDetails?.status === "playing";
@@ -94,8 +95,6 @@ export default function GameScreen({ userId, roomId, onLeave }) {
     const bossCallNumber = useMutation(api.boss.bossCallNumber);
     const useBossPowerup = useMutation(api.boss.useBossPowerup);
     const claimDailyReward = useMutation(api.daily.claimDailyReward);
-
-    const activeBoss = useQuery(api.boss.getActiveBoss, { roomId });
 
     const handleTopUp = async () => {
         const result = await claimDailyReward({ userId });
