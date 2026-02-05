@@ -355,3 +355,50 @@ function shuffleArray<T>(array: T[]): T[] {
     }
     return arr;
 }
+
+// Admin function: Close all rooms (for cleanup)
+export const closeAllRooms = mutation({
+    args: {},
+    handler: async (ctx) => {
+        // Get all rooms
+        const rooms = await ctx.db.query("rooms").collect();
+
+        for (const room of rooms) {
+            // Delete all players in room
+            const players = await ctx.db
+                .query("roomPlayers")
+                .withIndex("by_room", (q) => q.eq("roomId", room._id))
+                .collect();
+
+            for (const player of players) {
+                await ctx.db.delete(player._id);
+            }
+
+            // Delete all messages in room
+            const messages = await ctx.db
+                .query("messages")
+                .withIndex("by_room", (q) => q.eq("roomId", room._id))
+                .collect();
+
+            for (const msg of messages) {
+                await ctx.db.delete(msg._id);
+            }
+
+            // Delete all games in room
+            const games = await ctx.db
+                .query("games")
+                .withIndex("by_room", (q) => q.eq("roomId", room._id))
+                .collect();
+
+            for (const game of games) {
+                await ctx.db.delete(game._id);
+            }
+
+            // Delete the room
+            await ctx.db.delete(room._id);
+        }
+
+        return { success: true, roomsDeleted: rooms.length };
+    },
+});
+
