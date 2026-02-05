@@ -40,6 +40,24 @@
     font-weight: 700;
 }
 
+.income-badge-sm {
+    background: hsl(200, 50%, 30%);
+    color: hsl(200, 80%, 80%);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.income-badge {
+    background: hsl(200, 50%, 30%);
+    color: hsl(200, 80%, 85%);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
 .farm-preview {
     flex: 1;
     display: flex;
@@ -771,6 +789,97 @@
     }
 }
 
+/* Crop rate display */
+.crop-time {
+    font-size: 0.65rem;
+    color: hsla(0, 0%, 100%, 0.6);
+}
+
+.crop-rate {
+    font-size: 0.6rem;
+    color: hsl(120, 60%, 60%);
+    font-weight: 600;
+}
+
+/* Section tips */
+.section-tip {
+    margin: 0 0 12px 0;
+    padding: 8px 12px;
+    background: hsla(200, 40%, 20%, 0.4);
+    border-radius: 8px;
+    color: hsl(200, 60%, 70%);
+    font-size: 0.8rem;
+}
+
+.synergy-active {
+    margin: 12px 0 0 0;
+    padding: 8px 12px;
+    background: hsla(120, 40%, 20%, 0.5);
+    border-radius: 8px;
+    color: hsl(120, 70%, 70%);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Animal rate display */
+.animal-rate {
+    font-size: 0.7rem;
+    color: hsl(200, 70%, 70%);
+    margin: 4px 0;
+}
+
+/* Shop item production info */
+.item-production {
+    font-size: 0.7rem;
+    color: hsl(120, 60%, 65%);
+    margin-bottom: 4px;
+}
+
+.item-roi {
+    font-size: 0.65rem;
+    color: hsl(200, 60%, 65%);
+    margin-bottom: 6px;
+}
+
+.item-uses {
+    font-size: 0.65rem;
+    color: hsl(280, 50%, 70%);
+    margin-bottom: 6px;
+}
+
+.item-permanent {
+    font-size: 0.65rem;
+    color: hsl(50, 80%, 60%);
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+/* ROI calculation display */
+.roi-calc {
+    margin: 0 0 16px 0;
+    padding: 12px;
+    background: hsla(200, 30%, 15%, 0.8);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: hsla(0, 0%, 100%, 0.85);
+}
+
+.roi-calc strong {
+    color: hsl(200, 70%, 70%);
+}
+
+.roi-calc em {
+    color: hsl(120, 60%, 65%);
+}
+
+/* Eggs section */
+.eggs-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid hsla(80, 30%, 30%, 0.3);
+}
+
 /* Mobile */
 @media (max-width: 768px) {
     .farm-fs-content {
@@ -778,7 +887,7 @@
     }
 
     .crop-selector-large {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
 
     .farm-grid-large {
@@ -786,10 +895,14 @@
     }
 
     .animals-grid-large {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .shop-items-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .crop-rate {
+        display: none;
     }
 }

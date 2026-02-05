@@ -1,27 +1,28 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-// Crop definitions - 12 crops with varied times and rewards
+// BALANCED ECONOMY: Crops are FREE to plant, return gems on harvest
+// Longer crops = better gems/minute (rewards patience)
 export const CROPS = {
-    // Quick crops (seconds to minutes)
-    seeds: { name: "Basic Seeds", emoji: "🌱", growTime: 30000, gemYield: 1, xp: 1, unlockLevel: 1 },
-    lettuce: { name: "Lettuce", emoji: "🥬", growTime: 60000, gemYield: 2, xp: 2, unlockLevel: 2 },
-    carrot: { name: "Carrots", emoji: "🥕", growTime: 120000, gemYield: 5, xp: 3, unlockLevel: 3 },
+    // Quick crops - Low gems/min, active play
+    sprout: { name: "Sprouts", emoji: "🌱", growTime: 30000, gemYield: 2, xp: 1, unlockLevel: 1 },
+    lettuce: { name: "Lettuce", emoji: "🥬", growTime: 60000, gemYield: 5, xp: 2, unlockLevel: 2 },
+    radish: { name: "Radish", emoji: "🫛", growTime: 120000, gemYield: 12, xp: 3, unlockLevel: 3 },
 
-    // Medium crops (5-15 min)
-    potato: { name: "Potatoes", emoji: "🥔", growTime: 180000, gemYield: 8, xp: 4, unlockLevel: 4 },
-    corn: { name: "Corn", emoji: "🌽", growTime: 300000, gemYield: 12, xp: 6, unlockLevel: 5 },
-    tomato: { name: "Tomatoes", emoji: "🍅", growTime: 600000, gemYield: 25, xp: 10, unlockLevel: 6 },
-    pepper: { name: "Peppers", emoji: "🌶️", growTime: 900000, gemYield: 40, xp: 14, unlockLevel: 8 },
+    // Medium crops - Balanced
+    carrot: { name: "Carrots", emoji: "🥕", growTime: 180000, gemYield: 21, xp: 4, unlockLevel: 4 },
+    potato: { name: "Potatoes", emoji: "🥔", growTime: 300000, gemYield: 40, xp: 6, unlockLevel: 5 },
+    corn: { name: "Corn", emoji: "🌽", growTime: 600000, gemYield: 90, xp: 10, unlockLevel: 6 },
 
-    // Long crops (20min-1hr)
-    strawberry: { name: "Strawberries", emoji: "🍓", growTime: 1200000, gemYield: 55, xp: 18, unlockLevel: 10 },
-    grapes: { name: "Grapes", emoji: "🍇", growTime: 1500000, gemYield: 65, xp: 22, unlockLevel: 12 },
-    sunflower: { name: "Sunflowers", emoji: "🌻", growTime: 1800000, gemYield: 80, xp: 28, unlockLevel: 14 },
+    // Long crops - High gems/min, idle play
+    tomato: { name: "Tomatoes", emoji: "🍅", growTime: 900000, gemYield: 150, xp: 15, unlockLevel: 8 },
+    pepper: { name: "Peppers", emoji: "🌶️", growTime: 1200000, gemYield: 220, xp: 20, unlockLevel: 10 },
+    strawberry: { name: "Strawberries", emoji: "🍓", growTime: 1800000, gemYield: 360, xp: 28, unlockLevel: 12 },
 
-    // Premium crops (1hr+)
-    pumpkin: { name: "Pumpkins", emoji: "🎃", growTime: 2700000, gemYield: 120, xp: 40, unlockLevel: 18 },
-    crystalBeet: { name: "Crystal Beets", emoji: "💎", growTime: 3600000, gemYield: 200, xp: 60, unlockLevel: 20 },
+    // Premium crops - Best ROI
+    pumpkin: { name: "Pumpkins", emoji: "🎃", growTime: 2700000, gemYield: 580, xp: 40, unlockLevel: 15 },
+    sunflower: { name: "Sunflowers", emoji: "🌻", growTime: 3600000, gemYield: 840, xp: 50, unlockLevel: 18 },
+    crystalBeet: { name: "Crystal Beets", emoji: "💎", growTime: 7200000, gemYield: 1800, xp: 80, unlockLevel: 20 },
 };
 
 // Plot unlock costs
@@ -357,24 +358,24 @@ export const getAvailableCrops = query({
 
 // ========== FARM SHOP ==========
 
-// Shop item definitions
+// Shop item definitions - BALANCED ECONOMY
 export const SHOP_ITEMS = {
-    // Seeds & Consumables
-    seedPack: { name: "Seed Pack", emoji: "🌱", cost: 10, type: "consumable", gives: { seeds: 10 } },
-    fertilizer: { name: "Fertilizer", emoji: "💩", cost: 25, type: "consumable", gives: { fertilizer: 5 } },
-    superFertilizer: { name: "Super Fertilizer", emoji: "✨", cost: 100, type: "consumable", gives: { superFertilizer: 2 } },
-    waterCan: { name: "Watering Can", emoji: "💧", cost: 50, type: "consumable", gives: { waterCan: 3 } },
+    // Boosts - enhance farming
+    fertilizer: { name: "Fertilizer", emoji: "💩", cost: 20, type: "consumable", gives: { fertilizer: 5 } },
+    superGrow: { name: "Super Grow", emoji: "✨", cost: 75, type: "consumable", gives: { superFertilizer: 2 } },
+    waterCan: { name: "Water Can", emoji: "💧", cost: 30, type: "consumable", gives: { waterCan: 3 } },
 
-    // Animals - passive gem producers
-    chicken: { name: "Chicken", emoji: "🐔", cost: 100, type: "animal", animal: "chickens", gemsPerMin: 1 },
-    duck: { name: "Duck", emoji: "🦆", cost: 200, type: "animal", animal: "ducks", gemsPerMin: 2 },
-    sheep: { name: "Sheep", emoji: "🐑", cost: 500, type: "animal", animal: "sheep", gemsPerMin: 5 },
-    cow: { name: "Cow", emoji: "🐄", cost: 1000, type: "animal", animal: "cows", gemsPerMin: 10 },
-    pig: { name: "Pig", emoji: "🐷", cost: 2000, type: "animal", animal: "pigs", gemsPerMin: 15 },
+    // Animals - passive producers with ~30h ROI
+    chicken: { name: "Chicken", emoji: "🐔", cost: 50, type: "animal", animal: "chickens" },
+    duck: { name: "Duck", emoji: "🦆", cost: 100, type: "animal", animal: "ducks" },
+    sheep: { name: "Sheep", emoji: "🐑", cost: 200, type: "animal", animal: "sheep" },
+    cow: { name: "Cow", emoji: "🐄", cost: 500, type: "animal", animal: "cows" },
+    pig: { name: "Pig", emoji: "🐷", cost: 1000, type: "animal", animal: "pigs" },
 
-    // Upgrades
-    sprinkler: { name: "Sprinkler", emoji: "💦", cost: 1500, type: "upgrade", upgrade: "sprinkler" },
-    farmBot: { name: "Farm Bot", emoji: "🤖", cost: 5000, type: "upgrade", upgrade: "farmBot" },
+    // Upgrades - permanent
+    sprinkler: { name: "Sprinkler", emoji: "💦", cost: 800, type: "upgrade", upgrade: "sprinkler" },
+    farmBot: { name: "Farm Bot", emoji: "🤖", cost: 2000, type: "upgrade", upgrade: "farmBot" },
+    extraPlot: { name: "Extra Plot", emoji: "🏡", cost: 500, type: "upgrade", upgrade: "extraPlot" },
 };
 
 // Get shop items
@@ -700,7 +701,8 @@ export const sellGoods = mutation({
         goodType: v.string(), // "wool", "milk", "truffles"
     },
     handler: async (ctx, args) => {
-        const GOOD_VALUES = { wool: 5, milk: 10, truffles: 25 };
+        // Prices match animal production rates for ~30h ROI
+        const GOOD_VALUES = { wool: 3, milk: 8, truffles: 30 };
         const value = GOOD_VALUES[args.goodType as keyof typeof GOOD_VALUES];
 
         if (!value) return { success: false, error: "Unknown good type" };
@@ -738,12 +740,14 @@ export const butcherAnimal = mutation({
         animalType: v.string(), // "cow" for beef, "pig" for pork, "sheep" for mutton
     },
     handler: async (ctx, args) => {
+        // Butcher prices are LESS than purchase price (you lose value by selling early)
+        // This incentivizes keeping animals for production
         const MEAT_VALUES = {
-            cow: { meat: "beef", gems: 150, emoji: "🥩" },
-            pig: { meat: "pork", gems: 100, emoji: "🥓" },
-            sheep: { meat: "mutton", gems: 75, emoji: "🍖" },
-            chicken: { meat: "chicken", gems: 15, emoji: "🍗" },
-            duck: { meat: "duck", gems: 25, emoji: "🦆" },
+            chicken: { meat: "chicken", gems: 10, emoji: "🍗" }, // Cost 50, butcher 10
+            duck: { meat: "duck", gems: 20, emoji: "🦆" },       // Cost 100, butcher 20
+            sheep: { meat: "mutton", gems: 50, emoji: "🍖" },    // Cost 200, butcher 50
+            cow: { meat: "beef", gems: 100, emoji: "🥩" },       // Cost 500, butcher 100
+            pig: { meat: "pork", gems: 200, emoji: "🥓" },       // Cost 1000, butcher 200
         };
 
         const meatInfo = MEAT_VALUES[args.animalType as keyof typeof MEAT_VALUES];
