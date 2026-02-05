@@ -260,4 +260,28 @@ export default defineSchema({
         createdAt: v.number(),
     }).index("by_user", ["userId"])
         .index("by_stripe_id", ["stripeSubscriptionId"]),
+
+    // Bingo Farm - idle farming mini-game
+    farms: defineTable({
+        userId: v.id("users"),
+        plots: v.array(v.object({
+            cropType: v.optional(v.string()), // null = empty
+            plantedAt: v.optional(v.number()),
+            growTime: v.optional(v.number()), // ms to mature
+            isReady: v.boolean(),
+        })),
+        plotCount: v.number(), // How many plots unlocked (4-12)
+        helpers: v.object({
+            chicken: v.number(), // Auto-harvest count
+            farmBot: v.boolean(), // Auto-replant
+            sprinkler: v.boolean(), // 25% faster growth
+        }),
+        farmLevel: v.number(),
+        farmXp: v.number(),
+        totalHarvested: v.number(),
+        totalGemsEarned: v.number(),
+        lastBingoBonus: v.optional(v.number()), // Timestamp of last bingo win boost
+        isHidden: v.boolean(), // User preference
+        createdAt: v.number(),
+    }).index("by_user", ["userId"]),
 });

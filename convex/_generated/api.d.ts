@@ -14,6 +14,7 @@ import type * as challenges from "../challenges.js";
 import type * as chat from "../chat.js";
 import type * as cosmetics from "../cosmetics.js";
 import type * as daily from "../daily.js";
+import type * as farm from "../farm.js";
 import type * as games from "../games.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as luckyline from "../luckyline.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   chat: typeof chat;
   cosmetics: typeof cosmetics;
   daily: typeof daily;
+  farm: typeof farm;
   games: typeof games;
   leaderboard: typeof leaderboard;
   luckyline: typeof luckyline;

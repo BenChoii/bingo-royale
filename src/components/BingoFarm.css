@@ -1,0 +1,357 @@
+/* Bingo Farm - Bottom bar idle farming mini-game */
+
+.bingo-farm {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: linear-gradient(to top,
+            hsl(100, 35%, 12%) 0%,
+            hsl(120, 30%, 18%) 50%,
+            hsl(100, 25%, 22%) 100%);
+    border-top: 2px solid hsl(80, 50%, 35%);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+    transition: height 0.3s ease;
+    font-family: inherit;
+}
+
+.bingo-farm.collapsed {
+    height: 100px;
+}
+
+.bingo-farm.expanded {
+    height: 160px;
+}
+
+/* Header */
+.farm-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: hsla(100, 30%, 10%, 0.6);
+    cursor: pointer;
+    user-select: none;
+}
+
+.farm-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.farm-icon {
+    font-size: 1.2rem;
+    animation: sway 2s ease-in-out infinite;
+}
+
+@keyframes sway {
+
+    0%,
+    100% {
+        transform: rotate(-5deg);
+    }
+
+    50% {
+        transform: rotate(5deg);
+    }
+}
+
+.farm-name {
+    font-weight: 700;
+    color: hsl(80, 60%, 70%);
+    font-size: 0.9rem;
+}
+
+.farm-level {
+    background: hsl(80, 50%, 25%);
+    color: hsl(80, 70%, 80%);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.bingo-bonus {
+    background: linear-gradient(135deg, hsl(45, 100%, 50%), hsl(30, 100%, 50%));
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    animation: pulse-glow 1s infinite alternate;
+}
+
+@keyframes pulse-glow {
+    0% {
+        box-shadow: 0 0 5px hsla(45, 100%, 50%, 0.5);
+    }
+
+    100% {
+        box-shadow: 0 0 15px hsla(45, 100%, 50%, 0.8);
+    }
+}
+
+.farm-stats {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.farm-gems {
+    color: hsl(200, 80%, 70%);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.ready-badge {
+    background: hsl(120, 60%, 40%);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    animation: ready-pulse 0.8s infinite alternate;
+}
+
+@keyframes ready-pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(1.1);
+    }
+}
+
+.expand-btn {
+    background: none;
+    border: none;
+    color: hsl(80, 50%, 60%);
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+/* Plots */
+.farm-plots {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.farm-plots::-webkit-scrollbar {
+    display: none;
+}
+
+.farm-plot {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, hsl(30, 40%, 20%), hsl(25, 35%, 15%));
+    border: 2px solid hsl(30, 30%, 25%);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.farm-plot:hover {
+    transform: scale(1.05);
+    border-color: hsl(80, 50%, 40%);
+}
+
+.farm-plot.empty {
+    background: linear-gradient(135deg, hsl(30, 30%, 18%), hsl(25, 25%, 12%));
+    border-style: dashed;
+}
+
+.farm-plot.ready {
+    border-color: hsl(80, 70%, 50%);
+    box-shadow: 0 0 10px hsla(80, 70%, 50%, 0.5);
+}
+
+.empty-plot {
+    font-size: 1.5rem;
+    color: hsl(80, 30%, 40%);
+}
+
+.crop-emoji {
+    font-size: 1.5rem;
+}
+
+.crop-emoji.grow {
+    animation: grow-wiggle 1.5s ease-in-out infinite;
+}
+
+@keyframes grow-wiggle {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-2px);
+    }
+}
+
+.crop-emoji.bounce {
+    animation: ready-bounce 0.5s ease-in-out infinite;
+}
+
+@keyframes ready-bounce {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+}
+
+.progress-bar {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    right: 4px;
+    height: 4px;
+    background: hsla(0, 0%, 0%, 0.4);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, hsl(80, 60%, 40%), hsl(120, 60%, 50%));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+
+.sparkle {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    font-size: 0.8rem;
+    animation: sparkle 1s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+/* Expanded panel */
+.farm-expanded {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    gap: 12px;
+    border-top: 1px solid hsla(80, 30%, 30%, 0.5);
+}
+
+.crop-selector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.selector-label {
+    color: hsl(80, 40%, 60%);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.crop-option {
+    width: 36px;
+    height: 36px;
+    background: hsla(80, 20%, 15%, 0.8);
+    border: 2px solid transparent;
+    border-radius: 6px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.crop-option:hover {
+    background: hsla(80, 30%, 20%, 0.9);
+    transform: scale(1.1);
+}
+
+.crop-option.selected {
+    border-color: hsl(80, 60%, 50%);
+    background: hsla(80, 40%, 20%, 0.9);
+    box-shadow: 0 0 8px hsla(80, 60%, 50%, 0.4);
+}
+
+.harvest-btn {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, hsl(80, 60%, 35%), hsl(100, 50%, 30%));
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.harvest-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, hsl(80, 70%, 40%), hsl(100, 60%, 35%));
+    transform: scale(1.05);
+}
+
+.harvest-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .bingo-farm.collapsed {
+        height: 90px;
+    }
+
+    .bingo-farm.expanded {
+        height: 150px;
+    }
+
+    .farm-plot {
+        width: 42px;
+        height: 42px;
+    }
+
+    .crop-emoji {
+        font-size: 1.3rem;
+    }
+
+    .farm-name {
+        display: none;
+    }
+
+    .crop-option {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+}

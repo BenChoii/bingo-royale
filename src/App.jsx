@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import GameScreen from "./screens/GameScreen";
 import LoginScreen from "./screens/LoginScreen";
 import LobbyScreen from "./screens/LobbyScreen";
+import BingoFarm from "./components/BingoFarm";
 import "./App.css";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
 import { useQuery, useMutation } from "convex/react";
@@ -64,6 +65,9 @@ function App() {
         {!convexUser && user && (
           <div className="loading">Initializing your royal profile...</div>
         )}
+
+        {/* Bingo Farm - bottom bar idle game */}
+        {convexUser && <BingoFarm userId={convexUser._id} />}
       </SignedIn>
     </div>
   );
