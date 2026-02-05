@@ -991,12 +991,12 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                         {!isPlaying && !isFinished && roomDetails?.players?.length === 1 && (
                             <div className="solo-hint">You can start solo or wait for others to join!</div>
                         )}
-                        {isPlaying && (
+                        {(isPlaying || isBossBattleActive) && (
                             <button className="btn btn-accent btn-large" onClick={handleClaimBingo}>
                                 🎉 BINGO!
                             </button>
                         )}
-                        {isFinished && (!activeBoss?.status || activeBoss?.status === "lost" || activeBoss?.status === "won") && (
+                        {isFinished && !activeBoss?.status && (
                             <div className="boss-battle-selection">
                                 {/* Timer bar - shows when selection phase is active */}
                                 {bossSelectionPhase?.status === "selecting" && (
@@ -1073,7 +1073,7 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                 </main>
 
                 {/* Floating BINGO Button (Mobile) */}
-                {isPlaying && (
+                {(isPlaying || isBossBattleActive) && (
                     <button className="floating-bingo-btn" onClick={handleClaimBingo}>
                         <span className="fab-icon">🎉</span>
                         <span className="fab-text">BINGO!</span>
