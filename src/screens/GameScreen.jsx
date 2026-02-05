@@ -72,6 +72,9 @@ export default function GameScreen({ userId, roomId, onLeave }) {
     const myCard = useQuery(api.games.getMyCard, { roomId, userId });
     const messages = useQuery(api.chat.getMessages, { roomId });
     const reactions = useQuery(api.chat.getReactions);
+    const recentPowerups = useQuery(api.powerups.getRecentPowerups,
+        gameState?._id ? { gameId: gameState._id } : "skip"
+    );
 
     const isHost = roomDetails?.hostId === userId;
     const isPlaying = roomDetails?.status === "playing";
@@ -335,18 +338,38 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                                 const isShielded = player.shieldUntil && player.shieldUntil > Date.now();
                                 const isRecentlyScrambled = player.scrambledAt && (Date.now() - player.scrambledAt < 3000);
 
+                                // Find recent powerup used by this player
+                                const recentPowerup = recentPowerups?.find(p => p.sourceUserId === player.odId);
+                                const powerupIcons = {
+                                    quickdaub: "🎯",
+                                    wild: "🃏",
+                                    doublexp: "✨",
+                                    peek: "👁️",
+                                    freeze: "🧊",
+                                    shuffle: "🌀",
+                                    blind: "😵",
+                                    shield: "🛡️",
+                                    undaub: "🚫",
+                                };
+
                                 return (
                                     <div
-                                        key={player.odId}
-                                        className={`race-row ${player.odId === userId ? "is-me" : ""} ${targeting ? "clickable-target" : ""} ${isRecentlyScrambled ? "victim-scramble" : ""}`}
-                                        onClick={() => targeting && player.odId !== userId && handleUsePowerup(targeting.type, player.odId)}
+                                        key={player.odId || player._id}
+                                        className={`race-row ${player.odId === userId ? "is-me" : ""} ${targeting ? "clickable-target" : ""} ${isRecentlyScrambled ? "victim-scramble" : ""} ${player.isBot ? "is-bot" : ""}`}
+                                        onClick={() => targeting && player.odId !== userId && !player.isBot && handleUsePowerup(targeting.type, player.odId)}
                                     >
                                         <span className="race-rank">{getRankEmoji(index + 1)}</span>
                                         <div className="avatar-wrapper">
                                             <span className="race-avatar">{player.avatar}</span>
+                                            {player.isBot && <span className="bot-badge">🤖</span>}
                                             {isFrozen && <span className="status-mini-icon">🧊</span>}
                                             {isShielded && <span className="status-mini-icon">🛡️</span>}
                                             {isRecentlyScrambled && <span className="status-mini-icon scramble-pulse">🌀</span>}
+                                            {recentPowerup && (
+                                                <span className="powerup-indicator" title={`Used ${recentPowerup.type}`}>
+                                                    {powerupIcons[recentPowerup.type] || "⚡"}
+                                                </span>
+                                            )}
                                         </div>
                                         <span className="race-name">{player.name}</span>
                                         <div className="race-visual">

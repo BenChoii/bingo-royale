@@ -1,6 +1,35 @@
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { calculateDistanceToBingo } from "./games";
+
+// Get recent powerups for display (last 5 seconds)
+export const getRecentPowerups = query({
+    args: { gameId: v.id("games") },
+    handler: async (ctx, args) => {
+        const cutoff = Date.now() - 5000; // Last 5 seconds
+        const powerups = await ctx.db
+            .query("powerups")
+            .withIndex("by_game", (q) => q.eq("gameId", args.gameId))
+            .filter((q) => q.gte(q.field("usedAt"), cutoff))
+            .collect();
+
+        // Get user details for each powerup
+        const powerupsWithUsers = await Promise.all(
+            powerups.map(async (p) => {
+                const user = await ctx.db.get(p.sourceUserId);
+                const target = p.targetUserId ? await ctx.db.get(p.targetUserId) : null;
+                return {
+                    ...p,
+                    userName: user?.name || "Unknown",
+                    userAvatar: user?.avatar || "👤",
+                    targetName: target?.name,
+                };
+            })
+        );
+
+        return powerupsWithUsers;
+    },
+});
 
 const POWERUP_COSTS = {
     quickdaub: 50,

@@ -132,7 +132,8 @@ export default defineSchema({
             v.literal("freeze"),
             v.literal("shuffle"),
             v.literal("blind"),
-            v.literal("shield")
+            v.literal("shield"),
+            v.literal("undaub")
         ),
         usedAt: v.number(),
     }).index("by_game", ["gameId"])
