@@ -813,13 +813,18 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                                             ? (activeBoss.calledNumbers || []).includes(cell.value)
                                             : (gameState?.calledNumbers || []).includes(cell.value);
                                         const isPeeked = cell.value === peekedNumber;
+                                        const isScrambling = gameState?.players?.find(p => p.odId === userId)?.scrambledAt > Date.now() - 2000;
+                                        const scrambleDelay = (rowIndex * 5 + colIndex) * 50; // Staggered delay per cell
                                         return (
                                             <div
                                                 key={`${rowIndex}-${colIndex}`}
                                                 className={`bingo-cell ${isCalled ? "called" : ""} ${cell.daubed ? "daubed" : ""
-                                                    } ${cell.value === "FREE" ? "free-space" : ""} ${isPeeked ? "peeked-highlight" : ""}`}
+                                                    } ${cell.value === "FREE" ? "free-space" : ""} ${isPeeked ? "peeked-highlight" : ""} ${isScrambling && !cell.daubed && cell.value !== "FREE" ? "scrambling" : ""}`}
                                                 onClick={() => isCalled && handleCellClick(cell.value)}
-                                                style={{ cursor: isCalled && !cell.daubed ? "pointer" : "default" }}
+                                                style={{
+                                                    cursor: isCalled && !cell.daubed ? "pointer" : "default",
+                                                    animationDelay: isScrambling ? `${scrambleDelay}ms` : "0ms"
+                                                }}
                                             >
                                                 {cell.value === "FREE" ? "⭐" : cell.value}
                                             </div>

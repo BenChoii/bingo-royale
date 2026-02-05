@@ -1085,6 +1085,42 @@
     transition: all 0.2s ease;
 }
 
+/* Scramble animation for cells */
+.bingo-cell.scrambling {
+    animation: scramble-flip 0.8s ease-in-out forwards;
+}
+
+@keyframes scramble-flip {
+    0% {
+        transform: perspective(400px) rotateY(0deg) scale(1);
+        background: hsla(240, 15%, 18%, 0.9);
+    }
+
+    25% {
+        transform: perspective(400px) rotateY(180deg) scale(1.1);
+        background: hsla(300, 80%, 50%, 0.5);
+        border-color: hsl(300, 80%, 60%);
+    }
+
+    50% {
+        transform: perspective(400px) rotateY(360deg) scale(1.15);
+        background: hsla(180, 80%, 50%, 0.5);
+        border-color: hsl(180, 80%, 60%);
+    }
+
+    75% {
+        transform: perspective(400px) rotateY(540deg) scale(1.1);
+        background: hsla(60, 80%, 50%, 0.5);
+        border-color: hsl(60, 80%, 60%);
+    }
+
+    100% {
+        transform: perspective(400px) rotateY(720deg) scale(1);
+        background: hsla(275, 60%, 35%, 0.8);
+        border-color: hsl(275, 80%, 55%);
+    }
+}
+
 .bingo-cell.called {
     border-color: hsl(45, 100%, 60%);
     animation: pulse 0.5s ease-out;
