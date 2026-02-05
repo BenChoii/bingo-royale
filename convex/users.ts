@@ -73,6 +73,14 @@ export const getUser = query({
     },
 });
 
+// Get user by ID (alias for ShopScreen compatibility)
+export const getById = query({
+    args: { id: v.id("users") },
+    handler: async (ctx, args) => {
+        return await ctx.db.get(args.id);
+    },
+});
+
 // Get user by Clerk ID
 export const getUserByClerkId = query({
     args: { clerkId: v.string() },
