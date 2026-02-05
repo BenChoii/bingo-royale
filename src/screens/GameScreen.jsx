@@ -611,8 +611,12 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                     </div>
                     {targeting && (
                         <div className="targeting-banner">
-                            <span>👆 Select target below</span>
-                            <button onClick={() => setTargeting(null)}>✕</button>
+                            <span className="targeting-icon">{targeting.icon || '🎯'}</span>
+                            <div className="targeting-info">
+                                <span className="targeting-label">{targeting.label}</span>
+                                <span className="targeting-hint">👆 Tap an opponent below to target</span>
+                            </div>
+                            <button className="targeting-cancel" onClick={() => setTargeting(null)}>✕</button>
                         </div>
                     )}
                 </div>
