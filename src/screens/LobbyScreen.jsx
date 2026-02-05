@@ -213,31 +213,73 @@ export default function LobbyScreen({ userId, onJoinRoom, onLogout }) {
                                 <p className="hint">Create one to get started!</p>
                             </div>
                         )}
-                        {publicRooms?.map((room) => (
-                            <div key={room._id} className={`room-card ${room.status}`}>
-                                <div className="room-header">
-                                    <div className="room-header-top">
-                                        <span className="room-mode">{getModeIcon(room.mode)}</span>
-                                        {room.status === "playing" && (
-                                            <span className="status-badge playing">In Progress</span>
+                        {publicRooms?.map((room) => {
+                            // Calculate prize pool
+                            const prizePool = room.buyIn > 0 ? room.buyIn * room.playerCount : 0;
+                            const isBossBattle = room.mode === "blackout" || room.mode === "pattern";
+
+                            // Determine status badge
+                            const getStatusBadge = () => {
+                                if (room.status === "playing") {
+                                    if (isBossBattle) {
+                                        return <span className="status-badge boss">👹 Boss Fight!</span>;
+                                    }
+                                    return <span className="status-badge playing">🔴 LIVE</span>;
+                                }
+                                if (room.playerCount >= room.maxPlayers * 0.8) {
+                                    return <span className="status-badge filling">🔥 Almost Full!</span>;
+                                }
+                                if (room.playerCount > 1) {
+                                    return <span className="status-badge waiting">⏳ Waiting...</span>;
+                                }
+                                return <span className="status-badge new">✨ New</span>;
+                            };
+
+                            return (
+                                <div key={room._id} className={`room-card ${room.status} ${isBossBattle ? "boss-room" : ""}`}>
+                                    <div className="room-header">
+                                        <div className="room-header-top">
+                                            <span className="room-mode">{getModeIcon(room.mode)}</span>
+                                            {getStatusBadge()}
+                                        </div>
+                                        <span className="room-name">{room.name}</span>
+                                    </div>
+
+                                    <div className="room-info">
+                                        <span>👥 {room.playerCount}/{room.maxPlayers}</span>
+                                        <span>🎮 {room.mode}</span>
+                                    </div>
+
+                                    {/* Buy-in and Prize Display */}
+                                    <div className="room-stakes">
+                                        {room.buyIn > 0 ? (
+                                            <>
+                                                <div className="stake-item buy-in">
+                                                    <span className="stake-label">Entry</span>
+                                                    <span className="stake-value">💎 {room.buyIn.toLocaleString()}</span>
+                                                </div>
+                                                <div className="stake-item prize">
+                                                    <span className="stake-label">Prize Pool</span>
+                                                    <span className="stake-value prize-amount">🏆 {prizePool.toLocaleString()}</span>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="stake-item free">
+                                                <span className="free-badge">🆓 Free Play</span>
+                                            </div>
                                         )}
                                     </div>
-                                    <span className="room-name">{room.name}</span>
+
+                                    <button
+                                        className={`btn ${room.status === "playing" ? "btn-accent pulse-glow" : "btn-secondary"}`}
+                                        onClick={() => handleJoinPublicRoom(room)}
+                                        disabled={isJoining}
+                                    >
+                                        {room.status === "playing" ? "🎮 Spectate" : "Join Lobby"}
+                                    </button>
                                 </div>
-                                <div className="room-info">
-                                    <span>👥 {room.playerCount}/{room.maxPlayers}</span>
-                                    <span>🎮 {room.mode}</span>
-                                    {room.buyIn > 0 && <span>💎 {room.buyIn}</span>}
-                                </div>
-                                <button
-                                    className={`btn ${room.status === "playing" ? "btn-accent" : "btn-secondary"}`}
-                                    onClick={() => handleJoinPublicRoom(room)}
-                                    disabled={isJoining}
-                                >
-                                    {room.status === "playing" ? "Join Game" : "Join Lobby"}
-                                </button>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </section>
 
@@ -247,6 +289,9 @@ export default function LobbyScreen({ userId, onJoinRoom, onLogout }) {
                     <div className="leaderboard-list">
                         {leaderboard?.map((player, index) => {
                             const trendData = generateTrendData(player.wins, player.totalGames || player.wins + 5, 0);
+                            const totalGames = player.totalGames || player.wins + (player.losses || 5);
+                            const winRate = totalGames > 0 ? Math.round((player.wins / totalGames) * 100) : 0;
+
                             return (
                                 <div key={player.odId} className="leaderboard-row">
                                     <span className="rank">{getRankEmoji(index + 1)}</span>
@@ -255,7 +300,12 @@ export default function LobbyScreen({ userId, onJoinRoom, onLogout }) {
                                     <div className="player-trend">
                                         <Sparkline data={trendData} width={50} height={18} />
                                     </div>
-                                    <span className="player-wins">{player.wins} wins</span>
+                                    <div className="player-stats">
+                                        <span className="player-wins">{player.wins} wins</span>
+                                        <span className={`player-winrate ${winRate >= 50 ? "good" : "low"}`}>
+                                            {winRate}%
+                                        </span>
+                                    </div>
                                 </div>
                             );
                         })}

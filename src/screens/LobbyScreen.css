@@ -301,8 +301,8 @@
 .status-badge {
     font-size: 0.55rem;
     font-weight: 900;
-    padding: 1px 6px;
-    border-radius: 4px;
+    padding: 2px 8px;
+    border-radius: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-left: auto;
@@ -311,9 +311,137 @@
 }
 
 .status-badge.playing {
-    background: hsla(145, 70%, 50%, 0.15);
-    color: hsl(145, 70%, 60%);
-    border: 1px solid hsla(145, 70%, 50%, 0.3);
+    background: linear-gradient(135deg, hsl(0, 80%, 55%) 0%, hsl(15, 90%, 50%) 100%);
+    color: white;
+    animation: pulse-live 1.5s infinite;
+}
+
+.status-badge.boss {
+    background: linear-gradient(135deg, hsl(280, 80%, 50%) 0%, hsl(320, 80%, 45%) 100%);
+    color: white;
+    animation: pulse-boss 1s infinite;
+    font-size: 0.6rem;
+}
+
+.status-badge.waiting {
+    background: hsla(45, 100%, 50%, 0.15);
+    color: hsl(45, 100%, 60%);
+    border: 1px solid hsla(45, 100%, 50%, 0.3);
+}
+
+.status-badge.filling {
+    background: linear-gradient(135deg, hsl(30, 100%, 50%) 0%, hsl(0, 90%, 50%) 100%);
+    color: white;
+    animation: pulse-urgent 0.8s infinite;
+}
+
+.status-badge.new {
+    background: hsla(180, 70%, 50%, 0.15);
+    color: hsl(180, 70%, 60%);
+    border: 1px solid hsla(180, 70%, 50%, 0.3);
+}
+
+@keyframes pulse-live {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+@keyframes pulse-boss {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 hsla(280, 80%, 50%, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 10px 2px hsla(280, 80%, 50%, 0.6);
+    }
+}
+
+@keyframes pulse-urgent {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.room-card.boss-room {
+    border-color: hsla(280, 80%, 50%, 0.4);
+    background: linear-gradient(180deg, hsla(280, 50%, 20%, 0.8) 0%, hsla(240, 15%, 15%, 0.8) 100%);
+}
+
+/* Stakes Display */
+.room-stakes {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid hsla(255, 50%, 70%, 0.1);
+}
+
+.stake-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+}
+
+.stake-label {
+    font-size: 0.6rem;
+    color: hsla(0, 0%, 100%, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stake-value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: white;
+}
+
+.stake-value.prize-amount {
+    color: hsl(45, 100%, 60%);
+}
+
+.stake-item.free {
+    justify-content: center;
+}
+
+.free-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: hsl(120, 70%, 55%);
+}
+
+/* Pulsing Join Button */
+.pulse-glow {
+    animation: btn-pulse 2s infinite;
+}
+
+@keyframes btn-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 hsla(275, 80%, 55%, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 15px 3px hsla(275, 80%, 55%, 0.6);
+    }
 }
 
 .room-name {
@@ -382,12 +510,35 @@
     opacity: 0.9;
 }
 
+.player-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+    min-width: 60px;
+}
+
 .player-wins {
     font-size: 0.85rem;
     color: hsl(145, 70%, 50%);
     font-weight: 600;
-    min-width: 55px;
-    text-align: right;
+}
+
+.player-winrate {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+.player-winrate.good {
+    background: hsla(145, 70%, 50%, 0.15);
+    color: hsl(145, 70%, 55%);
+}
+
+.player-winrate.low {
+    background: hsla(0, 70%, 50%, 0.15);
+    color: hsl(0, 70%, 60%);
 }
 
 /* Modal */
