@@ -19,30 +19,32 @@ const CROP_UNLOCK_LEVELS = {
 };
 
 const SHOP_CATEGORIES = {
+    animals: {
+        name: "🐾 Animals",
+        desc: "Buy animals to produce eggs & goods!",
+        items: {
+            chicken: { name: "Chicken", emoji: "🐔", cost: 100, desc: "Lays eggs → sell for 1💎 or hatch in 24h" },
+            duck: { name: "Duck", emoji: "🦆", cost: 200, desc: "Lays eggs → sell for 1💎 or hatch in 24h" },
+            sheep: { name: "Sheep", emoji: "🐑", cost: 500, desc: "Produces wool → sell for 5💎 each" },
+            cow: { name: "Cow", emoji: "🐄", cost: 1000, desc: "Produces milk → sell for 10💎 each" },
+            pig: { name: "Pig", emoji: "🐷", cost: 2000, desc: "Finds truffles → sell for 25💎 each" },
+        }
+    },
     consumables: {
-        name: "🌱 Seeds & Items",
+        name: "🌱 Items",
+        desc: "Boost your crops!",
         items: {
             seedPack: { name: "Seed Pack", emoji: "🌱", cost: 10, desc: "+10 basic seeds" },
             fertilizer: { name: "Fertilizer", emoji: "💩", cost: 25, desc: "5x fertilizer (2x crop yield)" },
             superFertilizer: { name: "Super Grow", emoji: "✨", cost: 100, desc: "2x instant grow potion" },
-            waterCan: { name: "Watering Can", emoji: "💧", cost: 50, desc: "3x speed boost for crops" },
-        }
-    },
-    animals: {
-        name: "🐾 Animals",
-        items: {
-            chicken: { name: "Chicken", emoji: "🐔", cost: 100, desc: "Produces 1 gem per minute" },
-            duck: { name: "Duck", emoji: "🦆", cost: 200, desc: "Produces 2 gems per minute" },
-            sheep: { name: "Sheep", emoji: "🐑", cost: 500, desc: "Produces 5 gems per minute" },
-            cow: { name: "Cow", emoji: "🐄", cost: 1000, desc: "Produces 10 gems per minute" },
-            pig: { name: "Pig", emoji: "🐷", cost: 2000, desc: "Produces 15 gems per minute" },
         }
     },
     upgrades: {
         name: "⚙️ Upgrades",
+        desc: "Permanent farm improvements",
         items: {
-            sprinkler: { name: "Sprinkler", emoji: "💦", cost: 1500, desc: "25% faster crop growth (permanent)" },
-            farmBot: { name: "Farm Bot", emoji: "🤖", cost: 5000, desc: "Auto-replant after harvest (permanent)" },
+            sprinkler: { name: "Sprinkler", emoji: "💦", cost: 1500, desc: "25% faster crop growth" },
+            farmBot: { name: "Farm Bot", emoji: "🤖", cost: 5000, desc: "Auto-replant after harvest" },
         }
     }
 };
@@ -51,6 +53,7 @@ export default function BingoFarm({ userId }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [selectedCrop, setSelectedCrop] = useState("seeds");
     const [showShop, setShowShop] = useState(false);
+    const [shopTab, setShopTab] = useState("animals");
     const [now, setNow] = useState(Date.now());
     const { showNotification } = useNotification();
 
@@ -60,6 +63,10 @@ export default function BingoFarm({ userId }) {
     const harvestCrops = useMutation(api.farm.harvestCrops);
     const buyShopItem = useMutation(api.farm.buyShopItem);
     const collectAnimalGems = useMutation(api.farm.collectAnimalGems);
+    const sellAllEggs = useMutation(api.farm.sellAllEggs);
+    const nurtureEgg = useMutation(api.farm.nurtureEgg);
+    const hatchEggs = useMutation(api.farm.hatchEggs);
+    const sellGoods = useMutation(api.farm.sellGoods);
 
     // Update time every second for progress bars
     useEffect(() => {
@@ -109,9 +116,53 @@ export default function BingoFarm({ userId }) {
     const handleCollectAnimals = async () => {
         const result = await collectAnimalGems({ userId });
         if (result.success) {
-            showNotification(`Collected +${result.gemsEarned} 💎 from animals!`, "success");
+            let msg = "Collected: ";
+            if (result.eggsLaid > 0) msg += `${result.eggsLaid} 🥚 `;
+            if (result.woolProduced > 0) msg += `${result.woolProduced} 🧶 `;
+            if (result.milkProduced > 0) msg += `${result.milkProduced} 🥛 `;
+            if (result.trufflesProduced > 0) msg += `${result.trufflesProduced} 🍄 `;
+            showNotification(msg, "success");
         } else {
-            showNotification(result.error || "No gems to collect", "info");
+            showNotification(result.error || "Nothing to collect", "info");
+        }
+    };
+
+    const handleSellAllEggs = async () => {
+        const result = await sellAllEggs({ userId });
+        if (result.success) {
+            showNotification(`Sold ${result.sold} eggs for ${result.gems} 💎!`, "success");
+        } else {
+            showNotification(result.error || "No eggs to sell", "info");
+        }
+    };
+
+    const handleNurtureEgg = async (index) => {
+        const result = await nurtureEgg({ userId, eggIndex: index });
+        if (result.success) {
+            showNotification(`Started nurturing ${result.type} egg! 24h to hatch 🐣`, "success");
+        } else {
+            showNotification(result.error || "Failed", "error");
+        }
+    };
+
+    const handleHatchEggs = async () => {
+        const result = await hatchEggs({ userId });
+        if (result.success) {
+            let msg = "Hatched: ";
+            if (result.chickensHatched > 0) msg += `${result.chickensHatched} 🐔 `;
+            if (result.ducksHatched > 0) msg += `${result.ducksHatched} 🦆 `;
+            showNotification(msg, "success");
+        } else {
+            showNotification(result.error || "No eggs ready", "info");
+        }
+    };
+
+    const handleSellGoods = async (goodType) => {
+        const result = await sellGoods({ userId, goodType });
+        if (result.success) {
+            showNotification(`Sold ${result.sold} for ${result.gems} 💎!`, "success");
+        } else {
+            showNotification(result.error || "Nothing to sell", "info");
         }
     };
 
@@ -123,9 +174,10 @@ export default function BingoFarm({ userId }) {
     const totalAnimals = farm.animals ?
         (farm.animals.chickens + farm.animals.ducks + farm.animals.sheep + farm.animals.cows + farm.animals.pigs) : 0;
 
-    const gemsPerMinute = farm.animals ?
-        (farm.animals.chickens * 1 + farm.animals.ducks * 2 + farm.animals.sheep * 5 +
-            farm.animals.cows * 10 + farm.animals.pigs * 15) : 0;
+    const eggs = farm.eggs || [];
+    const sellableEggs = eggs.filter(e => !e.nurturing);
+    const nurturingEggs = eggs.filter(e => e.nurturing);
+    const readyToHatch = nurturingEggs.filter(e => (now - e.laidAt) >= 24 * 60 * 60 * 1000);
 
     const formatTime = (ms) => {
         if (ms <= 0) return "Ready!";
@@ -133,7 +185,8 @@ export default function BingoFarm({ userId }) {
         if (seconds < 60) return `${seconds}s`;
         const minutes = Math.floor(seconds / 60);
         if (minutes < 60) return `${minutes}m`;
-        return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+        const hours = Math.floor(minutes / 60);
+        return `${hours}h ${minutes % 60}m`;
     };
 
     return (
@@ -147,12 +200,31 @@ export default function BingoFarm({ userId }) {
                             <button className="shop-close" onClick={() => setShowShop(false)}>✕</button>
                         </div>
 
+                        {/* Shop tabs */}
+                        <div className="shop-tabs">
+                            {Object.entries(SHOP_CATEGORIES).map(([id, cat]) => (
+                                <button
+                                    key={id}
+                                    className={`shop-tab ${shopTab === id ? "active" : ""}`}
+                                    onClick={() => setShopTab(id)}
+                                >
+                                    {cat.name}
+                                </button>
+                            ))}
+                            <button
+                                className={`shop-tab ${shopTab === "inventory" ? "active" : ""}`}
+                                onClick={() => setShopTab("inventory")}
+                            >
+                                📦 Inventory
+                            </button>
+                        </div>
+
                         <div className="shop-content">
-                            {Object.entries(SHOP_CATEGORIES).map(([categoryId, category]) => (
-                                <div key={categoryId} className="shop-category">
-                                    <h3>{category.name}</h3>
+                            {shopTab !== "inventory" && SHOP_CATEGORIES[shopTab] && (
+                                <>
+                                    <p className="shop-desc">{SHOP_CATEGORIES[shopTab].desc}</p>
                                     <div className="shop-items-grid">
-                                        {Object.entries(category.items).map(([itemId, item]) => (
+                                        {Object.entries(SHOP_CATEGORIES[shopTab].items).map(([itemId, item]) => (
                                             <button
                                                 key={itemId}
                                                 className="shop-item-card"
@@ -165,23 +237,97 @@ export default function BingoFarm({ userId }) {
                                             </button>
                                         ))}
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                </>
+                            )}
 
-                        {/* Show owned upgrades/animals */}
-                        {farm.animals && totalAnimals > 0 && (
-                            <div className="shop-owned">
-                                <h4>🐾 Your Animals ({gemsPerMinute} gems/min)</h4>
-                                <div className="owned-animals">
-                                    {farm.animals.chickens > 0 && <span>🐔 ×{farm.animals.chickens}</span>}
-                                    {farm.animals.ducks > 0 && <span>🦆 ×{farm.animals.ducks}</span>}
-                                    {farm.animals.sheep > 0 && <span>🐑 ×{farm.animals.sheep}</span>}
-                                    {farm.animals.cows > 0 && <span>🐄 ×{farm.animals.cows}</span>}
-                                    {farm.animals.pigs > 0 && <span>🐷 ×{farm.animals.pigs}</span>}
+                            {shopTab === "inventory" && (
+                                <div className="inventory-panel">
+                                    {/* Animals owned */}
+                                    <div className="inventory-section">
+                                        <h4>🐾 Your Animals</h4>
+                                        <div className="inventory-items">
+                                            {farm.animals?.chickens > 0 && <span className="inv-item">🐔 ×{farm.animals.chickens}</span>}
+                                            {farm.animals?.ducks > 0 && <span className="inv-item">🦆 ×{farm.animals.ducks}</span>}
+                                            {farm.animals?.sheep > 0 && <span className="inv-item">🐑 ×{farm.animals.sheep}</span>}
+                                            {farm.animals?.cows > 0 && <span className="inv-item">🐄 ×{farm.animals.cows}</span>}
+                                            {farm.animals?.pigs > 0 && <span className="inv-item">🐷 ×{farm.animals.pigs}</span>}
+                                            {totalAnimals === 0 && <span className="no-items">No animals yet - buy some!</span>}
+                                        </div>
+                                        {totalAnimals > 0 && (
+                                            <button className="action-btn" onClick={handleCollectAnimals}>
+                                                🐾 Collect from Animals
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Eggs */}
+                                    <div className="inventory-section">
+                                        <h4>🥚 Eggs ({eggs.length})</h4>
+                                        {eggs.length > 0 ? (
+                                            <>
+                                                <div className="eggs-grid">
+                                                    {eggs.slice(0, 20).map((egg, i) => {
+                                                        const isReady = egg.nurturing && (now - egg.laidAt) >= 24 * 60 * 60 * 1000;
+                                                        const timeLeft = egg.nurturing ? Math.max(0, 24 * 60 * 60 * 1000 - (now - egg.laidAt)) : 0;
+                                                        return (
+                                                            <div
+                                                                key={i}
+                                                                className={`egg-item ${egg.nurturing ? "nurturing" : ""} ${isReady ? "ready" : ""}`}
+                                                                onClick={() => !egg.nurturing && handleNurtureEgg(i)}
+                                                                title={egg.nurturing ? (isReady ? "Ready to hatch!" : `${formatTime(timeLeft)} left`) : "Click to nurture (24h to hatch)"}
+                                                            >
+                                                                {egg.type === "chicken" ? "🥚" : "🥚"}
+                                                                {egg.nurturing && !isReady && <span className="egg-timer">{formatTime(timeLeft)}</span>}
+                                                                {isReady && <span className="egg-ready">🐣</span>}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                                <div className="egg-actions">
+                                                    {sellableEggs.length > 0 && (
+                                                        <button className="action-btn sell" onClick={handleSellAllEggs}>
+                                                            💰 Sell All ({sellableEggs.length}) = {sellableEggs.length}💎
+                                                        </button>
+                                                    )}
+                                                    {readyToHatch.length > 0 && (
+                                                        <button className="action-btn hatch" onClick={handleHatchEggs}>
+                                                            🐣 Hatch Ready ({readyToHatch.length})
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <span className="no-items">No eggs - buy chickens or ducks!</span>
+                                        )}
+                                    </div>
+
+                                    {/* Goods */}
+                                    <div className="inventory-section">
+                                        <h4>📦 Goods to Sell</h4>
+                                        <div className="goods-grid">
+                                            {farm.inventory?.wool > 0 && (
+                                                <button className="good-item" onClick={() => handleSellGoods("wool")}>
+                                                    🧶 ×{farm.inventory.wool} <span className="good-value">= {farm.inventory.wool * 5}💎</span>
+                                                </button>
+                                            )}
+                                            {farm.inventory?.milk > 0 && (
+                                                <button className="good-item" onClick={() => handleSellGoods("milk")}>
+                                                    🥛 ×{farm.inventory.milk} <span className="good-value">= {farm.inventory.milk * 10}💎</span>
+                                                </button>
+                                            )}
+                                            {farm.inventory?.truffles > 0 && (
+                                                <button className="good-item" onClick={() => handleSellGoods("truffles")}>
+                                                    🍄 ×{farm.inventory.truffles} <span className="good-value">= {farm.inventory.truffles * 25}💎</span>
+                                                </button>
+                                            )}
+                                            {(!farm.inventory?.wool && !farm.inventory?.milk && !farm.inventory?.truffles) && (
+                                                <span className="no-items">No goods - collect from animals!</span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
@@ -197,6 +343,7 @@ export default function BingoFarm({ userId }) {
                     </div>
                     <div className="farm-stats">
                         <span className="farm-gems">💎 {farm.totalGemsEarned}</span>
+                        {eggs.length > 0 && <span className="egg-badge">🥚 {eggs.length}</span>}
                         {readyCrops > 0 && (
                             <span className="ready-badge">{readyCrops} ready!</span>
                         )}
@@ -216,7 +363,7 @@ export default function BingoFarm({ userId }) {
                             return (
                                 <div
                                     key={index}
-                                    className={`farm-plot ${plot.isReady ? "ready" : ""} ${!plot.cropType ? "empty" : ""} ${plot.fertilized ? "fertilized" : ""}`}
+                                    className={`farm-plot ${plot.isReady ? "ready" : ""} ${!plot.cropType ? "empty" : ""}`}
                                     onClick={() => handlePlant(index)}
                                     title={
                                         plot.cropType
@@ -250,7 +397,7 @@ export default function BingoFarm({ userId }) {
 
                         {/* Animals inline */}
                         {totalAnimals > 0 && (
-                            <div className="animals-inline" onClick={handleCollectAnimals} title={`${gemsPerMinute} gems/min - Click to collect!`}>
+                            <div className="animals-inline" onClick={handleCollectAnimals} title="Click to collect!">
                                 {farm.animals.chickens > 0 && <span>🐔{farm.animals.chickens > 1 ? `×${farm.animals.chickens}` : ""}</span>}
                                 {farm.animals.ducks > 0 && <span>🦆{farm.animals.ducks > 1 ? `×${farm.animals.ducks}` : ""}</span>}
                                 {farm.animals.sheep > 0 && <span>🐑{farm.animals.sheep > 1 ? `×${farm.animals.sheep}` : ""}</span>}
@@ -294,7 +441,7 @@ export default function BingoFarm({ userId }) {
 
                             {totalAnimals > 0 && (
                                 <button className="collect-btn" onClick={handleCollectAnimals}>
-                                    🐾 Collect ({gemsPerMinute}/min)
+                                    🐾 Collect
                                 </button>
                             )}
                         </div>

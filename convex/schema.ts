@@ -279,19 +279,28 @@ export default defineSchema({
         }),
         // Animals - passive gem producers
         animals: v.object({
-            chickens: v.number(), // 1 gem/min each
-            ducks: v.number(), // 2 gems/min each  
-            sheep: v.number(), // 5 gems/min each
-            cows: v.number(), // 10 gems/min each
-            pigs: v.number(), // 15 gems/min each
+            chickens: v.number(), // Lay eggs
+            ducks: v.number(), // Lay eggs  
+            sheep: v.number(), // Produce wool (gems)
+            cows: v.number(), // Produce milk (gems)
+            pigs: v.number(), // Find truffles (gems)
         }),
-        lastAnimalCollect: v.optional(v.number()), // When animals last collected
+        // Eggs - can be sold for 1 gem or hatched in 24h
+        eggs: v.array(v.object({
+            type: v.string(), // "chicken" or "duck"
+            laidAt: v.number(), // Timestamp
+            nurturing: v.boolean(), // If being nurtured to hatch
+        })),
+        lastAnimalCollect: v.optional(v.number()), // When animals last produced
         // Inventory - consumables
         inventory: v.object({
             seeds: v.number(), // Basic seeds
             fertilizer: v.number(), // 2x yield boost
             superFertilizer: v.number(), // 3x yield + instant grow
             waterCan: v.number(), // Speed up one crop by 50%
+            wool: v.number(), // From sheep, sell for 5 gems
+            milk: v.number(), // From cows, sell for 10 gems
+            truffles: v.number(), // From pigs, sell for 25 gems
         }),
         farmLevel: v.number(),
         farmXp: v.number(),

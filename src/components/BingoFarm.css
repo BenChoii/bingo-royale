@@ -564,6 +564,222 @@
     font-size: 1rem;
 }
 
+/* Shop tabs */
+.shop-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 12px 24px;
+    border-bottom: 1px solid hsla(80, 30%, 30%, 0.5);
+    background: hsla(100, 30%, 8%, 0.5);
+    overflow-x: auto;
+}
+
+.shop-tab {
+    padding: 10px 16px;
+    background: hsla(80, 20%, 15%, 0.6);
+    border: 2px solid hsla(80, 30%, 30%, 0.5);
+    border-radius: 10px;
+    color: hsl(80, 40%, 60%);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.shop-tab:hover {
+    background: hsla(80, 30%, 20%, 0.8);
+}
+
+.shop-tab.active {
+    background: hsla(80, 40%, 25%, 0.9);
+    border-color: hsl(80, 50%, 45%);
+    color: hsl(80, 70%, 80%);
+}
+
+.shop-desc {
+    color: hsla(0, 0%, 100%, 0.6);
+    margin: 0 0 16px 0;
+    font-size: 0.9rem;
+}
+
+/* Inventory panel */
+.inventory-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.inventory-section {
+    background: hsla(80, 20%, 12%, 0.5);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.inventory-section h4 {
+    margin: 0 0 12px 0;
+    color: hsl(80, 50%, 70%);
+    font-size: 1rem;
+}
+
+.inventory-items {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.inv-item {
+    background: hsla(80, 30%, 20%, 0.8);
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+
+.no-items {
+    color: hsla(0, 0%, 100%, 0.4);
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.action-btn {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, hsl(200, 60%, 35%), hsl(220, 50%, 30%));
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+}
+
+/* Eggs */
+.eggs-grid {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.egg-item {
+    width: 50px;
+    height: 50px;
+    background: hsla(40, 30%, 20%, 0.8);
+    border: 2px solid hsla(40, 40%, 30%, 0.6);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.egg-item:hover {
+    transform: scale(1.1);
+    border-color: hsl(40, 60%, 50%);
+}
+
+.egg-item.nurturing {
+    background: hsla(30, 50%, 25%, 0.8);
+    border-color: hsl(30, 60%, 40%);
+}
+
+.egg-item.ready {
+    background: hsla(80, 50%, 25%, 0.8);
+    border-color: hsl(80, 70%, 50%);
+    animation: egg-ready-pulse 0.8s infinite alternate;
+}
+
+@keyframes egg-ready-pulse {
+    0% {
+        box-shadow: 0 0 5px hsla(80, 70%, 50%, 0.5);
+    }
+
+    100% {
+        box-shadow: 0 0 15px hsla(80, 70%, 50%, 0.8);
+    }
+}
+
+.egg-timer {
+    position: absolute;
+    bottom: 2px;
+    font-size: 0.55rem;
+    color: hsla(0, 0%, 100%, 0.7);
+}
+
+.egg-ready {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 0.8rem;
+}
+
+.egg-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.action-btn.sell {
+    background: linear-gradient(135deg, hsl(45, 70%, 40%), hsl(35, 60%, 35%));
+}
+
+.action-btn.hatch {
+    background: linear-gradient(135deg, hsl(80, 60%, 35%), hsl(100, 50%, 30%));
+}
+
+/* Goods */
+.goods-grid {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.good-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: hsla(80, 20%, 15%, 0.8);
+    border: 2px solid hsla(80, 30%, 30%, 0.5);
+    border-radius: 10px;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.good-item:hover {
+    background: hsla(80, 30%, 20%, 0.9);
+    border-color: hsl(80, 50%, 45%);
+    transform: scale(1.02);
+}
+
+.good-value {
+    color: hsl(50, 80%, 60%);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+/* Egg badge */
+.egg-badge {
+    background: hsl(40, 50%, 35%);
+    color: hsl(40, 80%, 85%);
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
 /* Mobile adjustments */
 @media (max-width: 768px) {
     .bingo-farm.collapsed {
@@ -606,5 +822,20 @@
 
     .shop-items-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .shop-tabs {
+        padding: 10px 16px;
+    }
+
+    .shop-tab {
+        padding: 8px 12px;
+        font-size: 0.75rem;
+    }
+
+    .egg-item {
+        width: 44px;
+        height: 44px;
+        font-size: 1.3rem;
     }
 }

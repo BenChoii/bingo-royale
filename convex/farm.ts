@@ -96,11 +96,15 @@ export const initializeFarm = mutation({
                 cows: 0,
                 pigs: 0,
             },
+            eggs: [], // Eggs from chickens/ducks
             inventory: {
                 seeds: 5, // Start with 5 free seeds
                 fertilizer: 0,
                 superFertilizer: 0,
                 waterCan: 0,
+                wool: 0,
+                milk: 0,
+                truffles: 0,
             },
             farmLevel: 1,
             farmXp: 0,
@@ -433,38 +437,55 @@ export const collectAnimalGems = mutation({
 
         const now = Date.now();
         const lastCollect = farm.lastAnimalCollect || farm.createdAt;
-        const minutesPassed = Math.min(60, (now - lastCollect) / 60000); // Cap at 60 min
+        const hoursPassed = Math.min(24, (now - lastCollect) / 3600000); // Cap at 24h
 
-        if (minutesPassed < 1) {
-            return { success: false, error: "Animals need more time" };
+        if (hoursPassed < 0.5) { // Need at least 30 min
+            return { success: false, error: "Animals need more time (30min)" };
         }
 
-        // Calculate gems from each animal type
-        const gemsFromAnimals = Math.floor(
-            (farm.animals.chickens * 1 +
-                farm.animals.ducks * 2 +
-                farm.animals.sheep * 5 +
-                farm.animals.cows * 10 +
-                farm.animals.pigs * 15) * minutesPassed
-        );
+        const totalAnimals = farm.animals.chickens + farm.animals.ducks +
+            farm.animals.sheep + farm.animals.cows + farm.animals.pigs;
 
-        if (gemsFromAnimals === 0) {
+        if (totalAnimals === 0) {
             return { success: false, error: "No animals to collect from" };
         }
 
-        const user = await ctx.db.get(args.userId);
-        if (!user) return { success: false, error: "User not found" };
+        // Calculate production based on time passed
+        const productionMultiplier = Math.floor(hoursPassed * 2); // 2 items per hour
 
-        await ctx.db.patch(args.userId, { coins: user.coins + gemsFromAnimals });
+        // Chickens & Ducks lay eggs
+        const newEggs: { type: string; laidAt: number; nurturing: boolean }[] = [];
+        for (let i = 0; i < farm.animals.chickens * productionMultiplier; i++) {
+            newEggs.push({ type: "chicken", laidAt: now, nurturing: false });
+        }
+        for (let i = 0; i < farm.animals.ducks * productionMultiplier; i++) {
+            newEggs.push({ type: "duck", laidAt: now, nurturing: false });
+        }
+
+        // Sheep, Cows, Pigs produce goods
+        const woolProduced = farm.animals.sheep * productionMultiplier;
+        const milkProduced = farm.animals.cows * productionMultiplier;
+        const trufflesProduced = farm.animals.pigs * productionMultiplier;
+
+        // Update farm
+        const currentEggs = farm.eggs || [];
+        const newInventory = { ...farm.inventory };
+        newInventory.wool = (newInventory.wool || 0) + woolProduced;
+        newInventory.milk = (newInventory.milk || 0) + milkProduced;
+        newInventory.truffles = (newInventory.truffles || 0) + trufflesProduced;
+
         await ctx.db.patch(farm._id, {
             lastAnimalCollect: now,
-            totalGemsEarned: farm.totalGemsEarned + gemsFromAnimals,
+            eggs: [...currentEggs, ...newEggs],
+            inventory: newInventory,
         });
 
         return {
             success: true,
-            gemsEarned: gemsFromAnimals,
-            minutesPassed: Math.floor(minutesPassed),
+            eggsLaid: newEggs.length,
+            woolProduced,
+            milkProduced,
+            trufflesProduced,
         };
     },
 });
@@ -516,5 +537,184 @@ export const useFertilizer = mutation({
         });
 
         return { success: true };
+    },
+});
+
+// Sell an egg for 1 gem
+export const sellEgg = mutation({
+    args: {
+        userId: v.id("users"),
+        eggIndex: v.number(),
+    },
+    handler: async (ctx, args) => {
+        const farm = await ctx.db
+            .query("farms")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .first();
+
+        if (!farm) return { success: false, error: "No farm found" };
+        if (!farm.eggs || args.eggIndex >= farm.eggs.length) {
+            return { success: false, error: "Egg not found" };
+        }
+
+        const egg = farm.eggs[args.eggIndex];
+        if (egg.nurturing) {
+            return { success: false, error: "Can't sell a nurturing egg" };
+        }
+
+        const user = await ctx.db.get(args.userId);
+        if (!user) return { success: false, error: "User not found" };
+
+        // Remove egg and give 1 gem
+        const newEggs = farm.eggs.filter((_, i) => i !== args.eggIndex);
+        await ctx.db.patch(farm._id, { eggs: newEggs });
+        await ctx.db.patch(args.userId, { coins: user.coins + 1 });
+
+        return { success: true, gem: 1 };
+    },
+});
+
+// Sell all eggs for gems
+export const sellAllEggs = mutation({
+    args: { userId: v.id("users") },
+    handler: async (ctx, args) => {
+        const farm = await ctx.db
+            .query("farms")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .first();
+
+        if (!farm) return { success: false, error: "No farm found" };
+
+        const sellableEggs = (farm.eggs || []).filter(e => !e.nurturing);
+        if (sellableEggs.length === 0) {
+            return { success: false, error: "No eggs to sell" };
+        }
+
+        const user = await ctx.db.get(args.userId);
+        if (!user) return { success: false, error: "User not found" };
+
+        const nurturingEggs = (farm.eggs || []).filter(e => e.nurturing);
+        await ctx.db.patch(farm._id, { eggs: nurturingEggs });
+        await ctx.db.patch(args.userId, { coins: user.coins + sellableEggs.length });
+
+        return { success: true, sold: sellableEggs.length, gems: sellableEggs.length };
+    },
+});
+
+// Start nurturing an egg (24h to hatch)
+export const nurtureEgg = mutation({
+    args: {
+        userId: v.id("users"),
+        eggIndex: v.number(),
+    },
+    handler: async (ctx, args) => {
+        const farm = await ctx.db
+            .query("farms")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .first();
+
+        if (!farm) return { success: false, error: "No farm found" };
+        if (!farm.eggs || args.eggIndex >= farm.eggs.length) {
+            return { success: false, error: "Egg not found" };
+        }
+
+        const egg = farm.eggs[args.eggIndex];
+        if (egg.nurturing) {
+            return { success: false, error: "Already nurturing" };
+        }
+
+        // Start nurturing
+        const newEggs = [...farm.eggs];
+        newEggs[args.eggIndex] = { ...egg, nurturing: true, laidAt: Date.now() };
+        await ctx.db.patch(farm._id, { eggs: newEggs });
+
+        return { success: true, type: egg.type };
+    },
+});
+
+// Hatch all ready eggs (24h after nurturing started)
+export const hatchEggs = mutation({
+    args: { userId: v.id("users") },
+    handler: async (ctx, args) => {
+        const farm = await ctx.db
+            .query("farms")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .first();
+
+        if (!farm) return { success: false, error: "No farm found" };
+
+        const now = Date.now();
+        const HATCH_TIME = 24 * 60 * 60 * 1000; // 24 hours
+
+        let chickensHatched = 0;
+        let ducksHatched = 0;
+        const remainingEggs: typeof farm.eggs = [];
+
+        for (const egg of (farm.eggs || [])) {
+            if (egg.nurturing && (now - egg.laidAt) >= HATCH_TIME) {
+                // Egg is ready to hatch!
+                if (egg.type === "chicken") chickensHatched++;
+                else if (egg.type === "duck") ducksHatched++;
+            } else {
+                remainingEggs.push(egg);
+            }
+        }
+
+        if (chickensHatched === 0 && ducksHatched === 0) {
+            return { success: false, error: "No eggs ready to hatch" };
+        }
+
+        const newAnimals = { ...farm.animals };
+        newAnimals.chickens += chickensHatched;
+        newAnimals.ducks += ducksHatched;
+
+        await ctx.db.patch(farm._id, {
+            eggs: remainingEggs,
+            animals: newAnimals,
+        });
+
+        return {
+            success: true,
+            chickensHatched,
+            ducksHatched,
+        };
+    },
+});
+
+// Sell goods for gems
+export const sellGoods = mutation({
+    args: {
+        userId: v.id("users"),
+        goodType: v.string(), // "wool", "milk", "truffles"
+    },
+    handler: async (ctx, args) => {
+        const GOOD_VALUES = { wool: 5, milk: 10, truffles: 25 };
+        const value = GOOD_VALUES[args.goodType as keyof typeof GOOD_VALUES];
+
+        if (!value) return { success: false, error: "Unknown good type" };
+
+        const farm = await ctx.db
+            .query("farms")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .first();
+
+        if (!farm) return { success: false, error: "No farm found" };
+
+        const amount = farm.inventory[args.goodType as keyof typeof farm.inventory] || 0;
+        if (amount <= 0) {
+            return { success: false, error: `No ${args.goodType} to sell` };
+        }
+
+        const user = await ctx.db.get(args.userId);
+        if (!user) return { success: false, error: "User not found" };
+
+        const totalGems = amount * value;
+        const newInventory = { ...farm.inventory };
+        newInventory[args.goodType as keyof typeof newInventory] = 0;
+
+        await ctx.db.patch(farm._id, { inventory: newInventory });
+        await ctx.db.patch(args.userId, { coins: user.coins + totalGems });
+
+        return { success: true, sold: amount, gems: totalGems };
     },
 });
