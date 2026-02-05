@@ -934,12 +934,18 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                                             <div className="boss-victory">
                                                 <span className="v-icon">✨</span>
                                                 <span className="v-text">BOSS DEFEATED!</span>
+                                                <button className="btn btn-primary btn-large" onClick={handleStartGame} style={{ marginTop: '16px' }}>
+                                                    🔄 Start New Match
+                                                </button>
                                             </div>
                                         )}
                                         {activeBoss?.status === "lost" && (
                                             <div className="boss-defeat">
                                                 <span className="v-icon">💀</span>
                                                 <span className="v-text">THE BOSS ESCAPED...</span>
+                                                <button className="btn btn-primary btn-large" onClick={handleStartGame} style={{ marginTop: '16px' }}>
+                                                    🔄 Start New Match
+                                                </button>
                                             </div>
                                         )}
                                     </div>
