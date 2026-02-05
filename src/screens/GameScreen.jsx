@@ -79,6 +79,7 @@ export default function GameScreen({ userId, roomId, onLeave }) {
     const isHost = roomDetails?.hostId === userId;
     const isPlaying = roomDetails?.status === "playing";
     const isFinished = roomDetails?.status === "finished";
+    const isBossBattleActive = activeBoss?.status === "active";
 
     const startGame = useMutation(api.games.startGame);
     const claimBingo = useMutation(api.games.claimBingo);
@@ -423,7 +424,7 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                                         key={po.type}
                                         className={`powerup-btn ${cooldown ? 'on-cooldown' : ''} ${targeting?.type === po.type ? 'active-targeting' : ''}`}
                                         onClick={() => handleUsePowerup(po.type)}
-                                        disabled={!isPlaying || (user?.coins || 0) < po.cost || !!cooldown}
+                                        disabled={(!isPlaying && !isBossBattleActive) || (user?.coins || 0) < po.cost || !!cooldown}
                                         title={`${po.label}: ${po.desc} (${po.cost} Gems)${cooldown ? ` - ${cooldown}s left` : ''}`}
                                     >
                                         <span className="p-icon">{po.icon}</span>
@@ -568,7 +569,7 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                                                         key={po.type}
                                                         className={`powerup-btn ${cooldown ? 'on-cooldown' : ''} ${targeting?.type === po.type ? 'active-targeting' : ''}`}
                                                         onClick={() => handleUsePowerup(po.type)}
-                                                        disabled={!isPlaying || (user?.coins || 0) < po.cost || !!cooldown}
+                                                        disabled={(!isPlaying && !isBossBattleActive) || (user?.coins || 0) < po.cost || !!cooldown}
                                                         title={`${po.label}: ${po.desc} (${po.cost} Gems)${cooldown ? ` - ${cooldown}s left` : ''}`}
                                                     >
                                                         <span className="p-icon">{po.icon}</span>
