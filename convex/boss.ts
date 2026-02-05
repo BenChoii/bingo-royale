@@ -323,14 +323,31 @@ export const bossCallNumber = mutation({
                         createdAt: Date.now(),
                     });
                 } else {
-                    // Chaos Scramble
-                    const card = [...targetPlayer.card];
-                    const r = Math.floor(Math.random() * 5);
-                    const c = Math.floor(Math.random() * 5);
-                    if (card[r][c].value !== "FREE" && !card[r][c].daubed) {
-                        card[r][c].value = Math.floor(Math.random() * 75) + 1;
+                    // Chaos Scramble - shuffle ALL undaubed numbers
+                    const newCard = targetPlayer.card.map(row => row.map(cell => ({ ...cell })));
+
+                    const columns = [
+                        { min: 1, max: 15 },   // B column
+                        { min: 16, max: 30 },  // I column
+                        { min: 31, max: 45 },  // N column
+                        { min: 46, max: 60 },  // G column
+                        { min: 61, max: 75 },  // O column
+                    ];
+
+                    let scrambledCount = 0;
+                    for (let r = 0; r < 5; r++) {
+                        for (let c = 0; c < 5; c++) {
+                            if (newCard[r][c].value !== "FREE" && !newCard[r][c].daubed) {
+                                const range = columns[c];
+                                newCard[r][c].value = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+                                scrambledCount++;
+                            }
+                        }
+                    }
+
+                    if (scrambledCount > 0) {
                         await ctx.db.patch(targetPlayer._id, {
-                            card,
+                            card: newCard,
                             scrambledAt: Date.now()
                         });
                         await ctx.db.insert("messages", {
@@ -338,7 +355,7 @@ export const bossCallNumber = mutation({
                             userId: targetId,
                             userName: "System",
                             userAvatar: "🌀",
-                            content: `CHAOS PULSE! The boss has scrambled ${targetName}'s card!`,
+                            content: `CHAOS PULSE! The boss scrambled ALL of ${targetName}'s numbers! (${scrambledCount} changed)`,
                             type: "system",
                             createdAt: Date.now(),
                         });

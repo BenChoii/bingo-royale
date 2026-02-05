@@ -210,29 +210,42 @@ export const usePowerup = mutation({
                     effectDescription = `tried to scramble ${targetPlayer.odId} but they were SHIELDED!`;
                     effectApplied = true;
                 } else {
-                    const unDaubed = [];
+                    // Deep copy the card and scramble ALL undaubed numbers
+                    const newCard = targetPlayer.card.map(row => row.map(cell => ({ ...cell })));
+
+                    // Collect all undaubed positions and generate new random values for them
+                    const columns = [
+                        { min: 1, max: 15 },   // B column
+                        { min: 16, max: 30 },  // I column
+                        { min: 31, max: 45 },  // N column
+                        { min: 46, max: 60 },  // G column
+                        { min: 61, max: 75 },  // O column
+                    ];
+
+                    let scrambledCount = 0;
                     for (let r = 0; r < 5; r++) {
                         for (let c = 0; c < 5; c++) {
-                            if (!targetPlayer.card[r][c].daubed && targetPlayer.card[r][c].value !== "FREE") {
-                                unDaubed.push({ r, c });
+                            if (!newCard[r][c].daubed && newCard[r][c].value !== "FREE") {
+                                // Generate a new random number for this column
+                                const range = columns[c];
+                                newCard[r][c].value = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+                                scrambledCount++;
                             }
                         }
                     }
-                    if (unDaubed.length > 0) {
-                        const pos = unDaubed[Math.floor(Math.random() * unDaubed.length)];
-                        // Deep copy the card to avoid mutation issues
-                        const newCard = targetPlayer.card.map(row => row.map(cell => ({ ...cell })));
-                        const oldVal = newCard[pos.r][pos.c].value;
-                        const newVal = Math.floor(Math.random() * 75) + 1;
-                        newCard[pos.r][pos.c].value = newVal;
 
+                    if (scrambledCount > 0) {
+                        const distance = calculateDistanceToBingo(newCard, game.pattern);
                         await ctx.db.patch(targetPlayer._id, {
                             card: newCard,
-                            scrambledAt: Date.now()
+                            scrambledAt: Date.now(),
+                            distanceToBingo: distance,
                         });
                         const targetUser = await ctx.db.get(args.targetUserId);
-                        effectDescription = `SCRAMBLED ${targetUser?.name || "someone's"} card! (Changed ${oldVal} to ${newVal}) 🌀`;
+                        effectDescription = `SCRAMBLED ${targetUser?.name || "someone's"} entire card! (${scrambledCount} numbers shuffled) 🌀`;
                         effectApplied = true;
+                    } else {
+                        return { success: false, error: "No numbers to scramble!" };
                     }
                 }
                 break;
