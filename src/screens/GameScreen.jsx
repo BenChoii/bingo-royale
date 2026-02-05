@@ -156,7 +156,10 @@ export default function GameScreen({ userId, roomId, onLeave }) {
 
     const handleClaimBingo = async () => {
         // Boss battle mode - use boss-specific bingo
-        if (activeBoss?.status === "active") {
+        // Only trigger boss mode if boss is active AND room is finished (not in regular game)
+        const isActuallyInBossBattle = isBossBattleActive && roomDetails?.status !== "playing";
+
+        if (isActuallyInBossBattle) {
             try {
                 const result = await claimBossBingo({ roomId, odId: userId });
                 if (!result.success) {
@@ -189,7 +192,12 @@ export default function GameScreen({ userId, roomId, onLeave }) {
 
     const handleUsePowerup = async (type, targetId) => {
         // Boss battle mode - use boss-specific powerups
-        if (activeBoss?.status === "active") {
+        // IMPORTANT: Only trigger boss mode if:
+        // 1. Boss status is explicitly "active" AND
+        // 2. Room is NOT in normal "playing" status (boss battles only happen in "finished" rooms)
+        const isActuallyInBossBattle = isBossBattleActive && roomDetails?.status !== "playing";
+
+        if (isActuallyInBossBattle) {
             // Only allow boss-compatible powerups
             const bossPowerups = ["quickdaub", "wild", "freeze", "shield"];
             if (!bossPowerups.includes(type)) {
@@ -386,8 +394,10 @@ export default function GameScreen({ userId, roomId, onLeave }) {
     const handleCellClick = async (num) => {
         if (num === "FREE") return; // Can't click free space
 
-        // Boss battle mode
-        if (activeBoss?.status === "active") {
+        // Boss battle mode - only if boss is active AND room is finished (not in regular game)
+        const isActuallyInBossBattle = isBossBattleActive && roomDetails?.status !== "playing";
+
+        if (isActuallyInBossBattle) {
             await daubBossNumber({ roomId, userId, number: num });
             return;
         }
@@ -419,6 +429,21 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                 <button className="btn-back" onClick={handleLeave}>← Leave</button>
                 <div className="room-info-header">
                     <span className="room-code">{roomDetails?.code}</span>
+                    <button
+                        className="btn-share"
+                        onClick={() => {
+                            const shareUrl = `${window.location.origin}/room/${roomDetails?.code}`;
+                            navigator.clipboard.writeText(shareUrl).then(() => {
+                                showNotification("Room link copied! Share with friends 🔗", "success");
+                            }).catch(() => {
+                                // Fallback for older browsers
+                                showNotification(`Share: ${shareUrl}`, "info");
+                            });
+                        }}
+                        title="Copy link to share with friends"
+                    >
+                        📤 Share
+                    </button>
                     <span className="room-name-small">{roomDetails?.name}</span>
                 </div>
                 <div className="player-count">

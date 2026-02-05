@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, useParams, useNavigate } from "react-router-dom";
 import GameScreen from "./screens/GameScreen";
 import LoginScreen from "./screens/LoginScreen";
 import LobbyScreen from "./screens/LobbyScreen";
@@ -8,10 +9,48 @@ import { SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 
-function App() {
+// Room join handler component for /room/:code URLs
+function RoomJoinHandler({ userId, onJoinRoom }) {
+  const { code } = useParams();
+  const navigate = useNavigate();
+  const joinRoom = useMutation(api.rooms.joinRoom);
+  const room = useQuery(api.rooms.getRoomByCode, code ? { code: code.toUpperCase() } : "skip");
+
+  useEffect(() => {
+    if (room && userId) {
+      // Room exists, auto-join
+      joinRoom({ code: code.toUpperCase(), userId })
+        .then((result) => {
+          if (result.success) {
+            onJoinRoom(result.roomId);
+          } else {
+            // Failed to join, go to lobby
+            navigate("/", { replace: true });
+          }
+        })
+        .catch(() => {
+          navigate("/", { replace: true });
+        });
+    } else if (room === null) {
+      // Room doesn't exist, go to lobby
+      navigate("/", { replace: true });
+    }
+  }, [room, userId, code, joinRoom, navigate, onJoinRoom]);
+
+  return (
+    <div className="loading">
+      <div className="join-loading">
+        <span className="loading-emoji">👑</span>
+        <p>Joining room <strong>{code?.toUpperCase()}</strong>...</p>
+      </div>
+    </div>
+  );
+}
+
+function AppContent() {
   const { user, isLoaded } = useUser();
   const [currentRoom, setCurrentRoom] = useState(null);
-  const [screen, setScreen] = useState("lobby"); // lobby, game
+  const navigate = useNavigate();
 
   // Find the Convex user based on Clerk ID
   const convexUser = useQuery(api.users.getUserByClerkId,
@@ -33,12 +72,11 @@ function App() {
 
   const handleJoinRoom = (roomId) => {
     setCurrentRoom(roomId);
-    setScreen("game");
+    navigate("/", { replace: true });
   };
 
   const handleLeaveRoom = () => {
     setCurrentRoom(null);
-    setScreen("lobby");
   };
 
   return (
@@ -48,19 +86,39 @@ function App() {
       </SignedOut>
 
       <SignedIn>
-        {screen === "lobby" && convexUser && (
-          <LobbyScreen
-            userId={convexUser._id}
-            onJoinRoom={handleJoinRoom}
-            onLogout={() => { }} // Clerk handles sign out via UserButton
-          />
-        )}
-        {screen === "game" && convexUser && currentRoom && (
+        {currentRoom && convexUser ? (
           <GameScreen
             userId={convexUser._id}
             roomId={currentRoom}
             onLeave={handleLeaveRoom}
           />
+        ) : (
+          <Routes>
+            <Route
+              path="/"
+              element={
+                convexUser ? (
+                  <LobbyScreen
+                    userId={convexUser._id}
+                    onJoinRoom={handleJoinRoom}
+                    onLogout={() => { }}
+                  />
+                ) : user ? (
+                  <div className="loading">Initializing your royal profile...</div>
+                ) : null
+              }
+            />
+            <Route
+              path="/room/:code"
+              element={
+                convexUser ? (
+                  <RoomJoinHandler userId={convexUser._id} onJoinRoom={handleJoinRoom} />
+                ) : user ? (
+                  <div className="loading">Initializing your royal profile...</div>
+                ) : null
+              }
+            />
+          </Routes>
         )}
         {!convexUser && user && (
           <div className="loading">Initializing your royal profile...</div>
@@ -70,6 +128,14 @@ function App() {
         {convexUser && <BingoFarm userId={convexUser._id} />}
       </SignedIn>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
 
