@@ -7,6 +7,8 @@ import WelcomeDialog from "../components/WelcomeDialog";
 import Sparkline, { generateTrendData } from "../components/Sparkline";
 import ShopScreen from "./ShopScreen";
 import LuckyLineGame from "./LuckyLineGame";
+import ReferralScreen from "./ReferralScreen";
+import TournamentGate from "../components/TournamentGate";
 import "./LobbyScreen.css";
 import { UserButton } from "@clerk/clerk-react";
 
@@ -25,6 +27,7 @@ export default function LobbyScreen({ userId, onJoinRoom, onLogout }) {
     const [newRoomBuyIn, setNewRoomBuyIn] = useState(0);
     const [isJoining, setIsJoining] = useState(false);
     const [showShop, setShowShop] = useState(false);
+    const [showReferrals, setShowReferrals] = useState(false);
     const [luckyGameId, setLuckyGameId] = useState(null);
     const [showWelcome, setShowWelcome] = useState(false);
     const { showNotification } = useNotification();
@@ -200,6 +203,15 @@ export default function LobbyScreen({ userId, onJoinRoom, onLogout }) {
                         whileTap={{ scale: 0.95 }}
                     >
                         <span>💎</span> Shop
+                    </motion.button>
+
+                    <motion.button
+                        className="btn btn-referral btn-large"
+                        onClick={() => setShowReferrals(true)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        <span>🤝</span> Referrals
                     </motion.button>
                 </section>
 
@@ -415,6 +427,16 @@ export default function LobbyScreen({ userId, onJoinRoom, onLogout }) {
                         userId={userId}
                         gameId={luckyGameId || currentLuckyGame?._id}
                         onClose={() => setLuckyGameId(null)}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Referral Screen Modal */}
+            <AnimatePresence>
+                {showReferrals && (
+                    <ReferralScreen
+                        userId={userId}
+                        onClose={() => setShowReferrals(false)}
                     />
                 )}
             </AnimatePresence>

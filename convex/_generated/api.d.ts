@@ -21,8 +21,11 @@ import type * as luckyline from "../luckyline.js";
 import type * as paymentHelpers from "../paymentHelpers.js";
 import type * as payments from "../payments.js";
 import type * as powerups from "../powerups.js";
+import type * as referrals from "../referrals.js";
 import type * as rooms from "../rooms.js";
 import type * as subscriptions from "../subscriptions.js";
+import type * as syndicates from "../syndicates.js";
+import type * as tournaments from "../tournaments.js";
 import type * as users from "../users.js";
 
 import type {
@@ -45,8 +48,11 @@ declare const fullApi: ApiFromModules<{
   paymentHelpers: typeof paymentHelpers;
   payments: typeof payments;
   powerups: typeof powerups;
+  referrals: typeof referrals;
   rooms: typeof rooms;
   subscriptions: typeof subscriptions;
+  syndicates: typeof syndicates;
+  tournaments: typeof tournaments;
   users: typeof users;
 }>;
 

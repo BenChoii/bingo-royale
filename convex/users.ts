@@ -23,6 +23,7 @@ export const createUser = mutation({
         name: v.optional(v.string()),
         avatar: v.optional(v.string()),
         clerkId: v.optional(v.string()),
+        referralCode: v.optional(v.string()), // Optional referral code from inviter
     },
     handler: async (ctx, args) => {
         const name = args.name || generateRandomName();
@@ -44,9 +45,66 @@ export const createUser = mutation({
             createdAt: Date.now(),
         });
 
-        return { userId, name, avatar };
+        // Generate a unique referral code for the new user
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let code = "BINGO-";
+        for (let i = 0; i < 6; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        // Check for collision and regenerate if needed
+        let attempts = 0;
+        while (attempts < 10) {
+            const collision = await ctx.db
+                .query("referralCodes")
+                .withIndex("by_code", (q) => q.eq("code", code))
+                .unique();
+            if (!collision) break;
+            code = "BINGO-";
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            attempts++;
+        }
+
+        await ctx.db.insert("referralCodes", {
+            userId,
+            code,
+            usageCount: 0,
+            createdAt: Date.now(),
+        });
+
+        // If a referral code was provided, apply it
+        let referralApplied = false;
+        if (args.referralCode) {
+            const referralCodeRecord = await ctx.db
+                .query("referralCodes")
+                .withIndex("by_code", (q) => q.eq("code", args.referralCode!.toUpperCase()))
+                .unique();
+
+            if (referralCodeRecord && referralCodeRecord.userId !== userId) {
+                // Create the referral relationship
+                await ctx.db.insert("referrals", {
+                    referrerId: referralCodeRecord.userId,
+                    refereeId: userId,
+                    status: "pending",
+                    gamesPlayed: 0,
+                    createdAt: Date.now(),
+                });
+
+                // Increment usage count
+                await ctx.db.patch(referralCodeRecord._id, {
+                    usageCount: referralCodeRecord.usageCount + 1,
+                });
+
+                referralApplied = true;
+            }
+        }
+
+        return { userId, name, avatar, referralCode: code, referralApplied };
     },
 });
+
 
 // Update user profile
 export const updateUser = mutation({

@@ -1,0 +1,239 @@
+.gate-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.gate-modal {
+    background: linear-gradient(145deg, #1e1e2f 0%, #0d0d18 100%);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 400px;
+    padding: 1.5rem;
+    position: relative;
+    border: 1px solid rgba(255, 215, 0, 0.15);
+    box-shadow:
+        0 0 80px rgba(255, 215, 0, 0.08),
+        0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.gate-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.gate-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 0.75rem;
+    animation: float 2s ease-in-out infinite;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.gate-header h2 {
+    font-size: 1.5rem;
+    color: white;
+    margin: 0 0 0.5rem;
+}
+
+.gate-header p {
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Options */
+.gate-options {
+    margin-bottom: 1.5rem;
+}
+
+.gate-option {
+    border-radius: 16px;
+    padding: 1.25rem;
+    position: relative;
+}
+
+.referral-option {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    margin-bottom: 1rem;
+}
+
+.purchase-option {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.option-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 0.25rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.option-content {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.option-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.option-content h3 {
+    color: white;
+    margin: 0 0 0.25rem;
+    font-size: 1.1rem;
+}
+
+.option-content p {
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+.benefits {
+    list-style: none;
+    padding: 0;
+    margin: 0.75rem 0 0;
+    text-align: left;
+}
+
+.benefits li {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    padding: 0.25rem 0;
+}
+
+.benefits li::before {
+    color: #4caf50;
+}
+
+.option-btn {
+    width: 100%;
+    padding: 0.875rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.option-btn.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+}
+
+.option-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(102, 126, 234, 0.5);
+}
+
+.option-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.option-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Divider */
+.option-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.option-divider::before,
+.option-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.option-divider span {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Social Proof */
+.social-proof {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: rgba(255, 152, 0, 0.1);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+
+.proof-icon {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.social-proof span:last-child {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+}
+
+/* Back Button */
+.back-btn {
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.back-btn:hover {
+    color: rgba(255, 255, 255, 0.6);
+}

@@ -310,4 +310,138 @@ export default defineSchema({
         isHidden: v.boolean(), // User preference
         createdAt: v.number(),
     }).index("by_user", ["userId"]),
+
+    // ===== SOCIAL VIRALITY SYSTEM =====
+
+    // Referral Codes - unique per user
+    referralCodes: defineTable({
+        userId: v.id("users"),
+        code: v.string(),  // "BINGO-ABC123"
+        usageCount: v.number(),
+        createdAt: v.number(),
+    })
+        .index("by_user", ["userId"])
+        .index("by_code", ["code"]),
+
+    // Referral Relationships
+    referrals: defineTable({
+        referrerId: v.id("users"),
+        refereeId: v.id("users"),
+        status: v.union(
+            v.literal("pending"),    // Signed up but not activated
+            v.literal("activated"),  // Completed 3 games
+            v.literal("rewarded")    // Both parties got their pass
+        ),
+        gamesPlayed: v.number(),     // Track activation progress (0-3)
+        activatedAt: v.optional(v.number()),
+        rewardedAt: v.optional(v.number()),
+        createdAt: v.number(),
+    })
+        .index("by_referrer", ["referrerId"])
+        .index("by_referee", ["refereeId"]),
+
+    // Tournament Access Passes
+    tournamentPasses: defineTable({
+        userId: v.id("users"),
+        type: v.union(
+            v.literal("weekly"),     // 7 days
+            v.literal("premium"),    // 30 days
+            v.literal("permanent")   // Lifetime (Royale Crown)
+        ),
+        source: v.union(
+            v.literal("referral"),   // Earned through invite
+            v.literal("purchase"),   // Paid with real money
+            v.literal("reward")      // Won through gameplay
+        ),
+        expiresAt: v.optional(v.number()), // null for permanent
+        createdAt: v.number(),
+    })
+        .index("by_user", ["userId"]),
+
+    // ===== TEAMS/SYNDICATES SYSTEM =====
+
+    // Syndicates (Teams)
+    syndicates: defineTable({
+        name: v.string(),
+        logo: v.string(), // Emoji combo (e.g., "🔥👑")
+        color: v.string(), // Hex gradient (e.g., "#FF6B6B,#4ECDC4")
+        leaderId: v.id("users"),
+        treasury: v.number(), // Shared gem pool
+        defaultTitheRate: v.number(), // Default contribution % (0-100)
+        weeklyWins: v.number(),
+        weeklyBossKills: v.number(),
+        memberCount: v.number(),
+        isPublic: v.boolean(), // Can anyone join?
+        createdAt: v.number(),
+    })
+        .index("by_leader", ["leaderId"])
+        .index("by_name", ["name"]),
+
+    // Syndicate Membership
+    syndicateMembers: defineTable({
+        syndicateId: v.id("syndicates"),
+        userId: v.id("users"),
+        role: v.union(
+            v.literal("leader"),
+            v.literal("officer"),
+            v.literal("member")
+        ),
+        personalTitheRate: v.optional(v.number()), // Override default
+        weeklyContribution: v.number(),
+        totalContribution: v.number(),
+        joinedAt: v.number(),
+    })
+        .index("by_syndicate", ["syndicateId"])
+        .index("by_user", ["userId"]),
+
+    // ===== SCHEDULED TOURNAMENTS =====
+
+    // Tournaments (scheduled events with brackets)
+    tournaments: defineTable({
+        name: v.string(),
+        type: v.union(
+            v.literal("royale"),        // Grand Royale (daily)
+            v.literal("blitz"),         // Speed Blitz (hourly)
+            v.literal("syndicate_war")  // Team vs Team
+        ),
+        status: v.union(
+            v.literal("upcoming"),      // Registration open
+            v.literal("registration"),  // Active registration
+            v.literal("active"),        // Tournament in progress
+            v.literal("completed")      // Finished
+        ),
+        prizePool: v.number(),
+        entryFee: v.number(), // Gems (separate from pass requirement)
+        maxParticipants: v.number(),
+        minParticipants: v.number(),
+        registeredCount: v.number(),
+        teamMode: v.boolean(),
+        requiresPass: v.boolean(), // Does this tournament need a Tournament Pass?
+        startsAt: v.number(),
+        registrationEndsAt: v.number(),
+        endsAt: v.optional(v.number()),
+        winnerId: v.optional(v.id("users")),
+        winningSyndicateId: v.optional(v.id("syndicates")),
+        createdAt: v.number(),
+    })
+        .index("by_status", ["status"])
+        .index("by_start", ["startsAt"]),
+
+    // Tournament Registrations
+    tournamentRegistrations: defineTable({
+        tournamentId: v.id("tournaments"),
+        userId: v.id("users"),
+        syndicateId: v.optional(v.id("syndicates")), // For team tournaments
+        status: v.union(
+            v.literal("registered"),
+            v.literal("checked_in"),
+            v.literal("eliminated"),
+            v.literal("winner")
+        ),
+        placement: v.optional(v.number()), // Final rank
+        gemsWon: v.optional(v.number()),
+        registeredAt: v.number(),
+    })
+        .index("by_tournament", ["tournamentId"])
+        .index("by_user", ["userId"]),
 });

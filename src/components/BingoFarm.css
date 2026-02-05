@@ -3,7 +3,7 @@
 /* ========== WALKING ANIMALS ========== */
 .walking-animals-container {
     position: fixed;
-    bottom: 145px;
+    bottom: 60px;
     left: 0;
     right: 0;
     height: 40px;
@@ -74,15 +74,16 @@
 /* ========== MINIMAL COLLAPSED BAR ========== */
 .farm-bar-minimal {
     position: fixed;
-    bottom: 145px;
-    left: 10px;
-    z-index: 75;
-    background: hsla(100, 30%, 15%, 0.85);
-    border: 1px solid hsla(80, 50%, 40%, 0.3);
-    border-radius: 10px;
-    padding: 6px 12px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 90;
+    background: linear-gradient(180deg, hsla(100, 30%, 12%, 0.95), hsla(100, 30%, 8%, 0.98));
+    border-top: 1px solid hsla(80, 50%, 40%, 0.3);
+    padding: 10px 16px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     cursor: pointer;
     transition: all 0.2s ease;

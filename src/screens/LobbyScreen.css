@@ -772,3 +772,14 @@
 .btn-shop:hover {
     box-shadow: 0 6px 20px hsla(45, 100%, 50%, 0.6);
 }
+
+/* Referral Button */
+.btn-referral {
+    background: linear-gradient(135deg, hsl(260, 70%, 55%) 0%, hsl(290, 60%, 50%) 100%) !important;
+    color: white !important;
+    box-shadow: 0 4px 15px hsla(260, 70%, 55%, 0.4);
+}
+
+.btn-referral:hover {
+    box-shadow: 0 6px 20px hsla(260, 70%, 55%, 0.6);
+}

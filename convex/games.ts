@@ -322,7 +322,70 @@ export const claimBingo = mutation({
 
         await ctx.db.patch(game.roomId, { status: "finished" });
 
-        // Award prizes
+        // Update totalGames for ALL players in the room (including losers)
+        const allPlayers = await ctx.db
+            .query("roomPlayers")
+            .withIndex("by_room", (q) => q.eq("roomId", game.roomId))
+            .collect();
+
+        for (const p of allPlayers) {
+            if (p.odId && p.odId !== args.userId) {
+                const odId = p.odId; // TypeScript narrowing
+                const loserUser = await ctx.db.get(odId);
+                if (loserUser) {
+                    await ctx.db.patch(p.odId, {
+                        totalGames: loserUser.totalGames + 1,
+                        currentStreak: 0, // Reset streak on loss
+                    });
+
+                    // Check referral activation for all players who completed a game
+                    const loserReferral = await ctx.db
+                        .query("referrals")
+                        .withIndex("by_referee", (q) => q.eq("refereeId", odId))
+                        .unique();
+
+                    if (loserReferral && loserReferral.status === "pending") {
+                        const newGamesPlayed = loserReferral.gamesPlayed + 1;
+                        if (newGamesPlayed >= 3) {
+                            // Activate the referral and grant passes
+                            const now = Date.now();
+                            const expiresAt = now + (7 * 24 * 60 * 60 * 1000); // 7 days
+
+                            await ctx.db.patch(loserReferral._id, {
+                                gamesPlayed: newGamesPlayed,
+                                status: "rewarded",
+                                activatedAt: now,
+                                rewardedAt: now,
+                            });
+
+                            // Grant pass to referee (the new player)
+                            await ctx.db.insert("tournamentPasses", {
+                                userId: p.odId,
+                                type: "weekly",
+                                source: "referral",
+                                expiresAt,
+                                createdAt: now,
+                            });
+
+                            // Grant pass to referrer (the inviter)
+                            await ctx.db.insert("tournamentPasses", {
+                                userId: loserReferral.referrerId,
+                                type: "weekly",
+                                source: "referral",
+                                expiresAt,
+                                createdAt: now,
+                            });
+                        } else {
+                            await ctx.db.patch(loserReferral._id, {
+                                gamesPlayed: newGamesPlayed,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // Award prizes to winner
         const user = await ctx.db.get(args.userId);
         if (user) {
             const config = GAME_CONFIG[room.mode];
@@ -367,6 +430,47 @@ export const claimBingo = mutation({
                 achievements: newAchievements,
             });
 
+            // Check referral activation for winner too
+            const winnerReferral = await ctx.db
+                .query("referrals")
+                .withIndex("by_referee", (q) => q.eq("refereeId", args.userId))
+                .unique();
+
+            if (winnerReferral && winnerReferral.status === "pending") {
+                const newGamesPlayed = winnerReferral.gamesPlayed + 1;
+                if (newGamesPlayed >= 3) {
+                    const now = Date.now();
+                    const expiresAt = now + (7 * 24 * 60 * 60 * 1000);
+
+                    await ctx.db.patch(winnerReferral._id, {
+                        gamesPlayed: newGamesPlayed,
+                        status: "rewarded",
+                        activatedAt: now,
+                        rewardedAt: now,
+                    });
+
+                    await ctx.db.insert("tournamentPasses", {
+                        userId: args.userId,
+                        type: "weekly",
+                        source: "referral",
+                        expiresAt,
+                        createdAt: now,
+                    });
+
+                    await ctx.db.insert("tournamentPasses", {
+                        userId: winnerReferral.referrerId,
+                        type: "weekly",
+                        source: "referral",
+                        expiresAt,
+                        createdAt: now,
+                    });
+                } else {
+                    await ctx.db.patch(winnerReferral._id, {
+                        gamesPlayed: newGamesPlayed,
+                    });
+                }
+            }
+
             // System message
             await ctx.db.insert("messages", {
                 roomId: game.roomId,
@@ -389,6 +493,7 @@ export const claimBingo = mutation({
         return { success: true };
     },
 });
+
 
 // Get current game state
 export const getGameState = query({
