@@ -97,6 +97,7 @@ export default function GameScreen({ userId, roomId, onLeave }) {
     const claimDailyReward = useMutation(api.daily.claimDailyReward);
     const selectBossVote = useMutation(api.boss.selectBossVote);
     const checkSelectionExpiry = useMutation(api.boss.checkSelectionExpiry);
+    const claimBossBingo = useMutation(api.boss.claimBossBingo);
 
     // Boss selection phase query
     const bossSelectionPhase = useQuery(api.boss.getBossSelectionPhase, { roomId });
@@ -154,6 +155,21 @@ export default function GameScreen({ userId, roomId, onLeave }) {
     };
 
     const handleClaimBingo = async () => {
+        // Boss battle mode - use boss-specific bingo
+        if (activeBoss?.status === "active") {
+            const result = await claimBossBingo({ roomId, odId: userId });
+            if (!result.success) {
+                showNotification(result.error || "Not a valid bingo!", "error");
+            } else {
+                showNotification(`💥 BINGO! ${result.damage} MASSIVE DAMAGE to the boss!`, "success");
+                if (result.victory) {
+                    showNotification("🏆 VICTORY! Boss defeated!", "success");
+                }
+            }
+            return;
+        }
+
+        // Regular game bingo
         if (!gameState) return;
         const result = await claimBingo({ gameId: gameState._id, userId });
         if (!result.success) {

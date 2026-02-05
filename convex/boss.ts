@@ -1,6 +1,7 @@
 import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { generateBingoCard } from "./rooms";
+import { checkBingo } from "./games";
 
 const BOSS_CONFIG = {
     1: { name: "Slime King 👑", wager: 100, multiplier: 3, health: 40, duration: 45000 },
@@ -663,6 +664,124 @@ export const getActiveBoss = query({
 
         // Otherwise, don't show stale boss results
         return null;
+    },
+});
+
+// Claim bingo during boss battle - deals massive damage to boss
+export const claimBossBingo = mutation({
+    args: {
+        roomId: v.id("rooms"),
+        odId: v.id("users"),
+    },
+    handler: async (ctx, args) => {
+        const bossGame = await ctx.db
+            .query("bossGames")
+            .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+            .filter((q) => q.eq(q.field("status"), "active"))
+            .first();
+
+        if (!bossGame) {
+            return { success: false, error: "No active boss battle!" };
+        }
+
+        const player = await ctx.db
+            .query("roomPlayers")
+            .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+            .filter((q) => q.eq(q.field("odId"), args.odId))
+            .first();
+
+        if (!player) {
+            return { success: false, error: "Player not in room" };
+        }
+
+        // Boss battles use "line" pattern for quick bingos
+        const hasBingo = checkBingo(player.card, "line");
+
+        if (!hasBingo) {
+            // False bingo - small penalty
+            const user = await ctx.db.get(args.odId);
+            if (user) {
+                await ctx.db.patch(args.odId, {
+                    coins: Math.max(0, user.coins - 10),
+                });
+            }
+            return { success: false, error: "Not a valid BINGO! (-10💎)" };
+        }
+
+        // Valid bingo! Deal massive damage to boss
+        const bingoDamage = 10;
+        const newHealth = Math.max(0, bossGame.health - bingoDamage);
+
+        // Track as damage event for animation
+        const user = await ctx.db.get(args.odId);
+        const damageEvent = {
+            odId: args.odId,
+            userName: user?.name || "Player",
+            userAvatar: user?.avatar || "👤",
+            damage: bingoDamage,
+            timestamp: Date.now(),
+            isBingo: true,
+        };
+
+        const recentEvents = (bossGame.damageEvents || []).slice(-9);
+        await ctx.db.patch(bossGame._id, {
+            health: newHealth,
+            damageEvents: [...recentEvents, damageEvent],
+        });
+
+        // Regenerate player's card for more bingo opportunities
+        const newCard = generateBingoCard();
+        await ctx.db.patch(player._id, { card: newCard });
+
+        // System message
+        await ctx.db.insert("messages", {
+            roomId: args.roomId,
+            userId: args.odId,
+            userName: "System",
+            userAvatar: "💥",
+            content: `${user?.name || "A player"} scored BINGO! 💥 ${bingoDamage} MASSIVE DAMAGE! (Boss HP: ${newHealth}/${bossGame.maxHealth})`,
+            type: "system",
+            createdAt: Date.now(),
+        });
+
+        // Check for victory
+        if (newHealth <= 0) {
+            await ctx.db.patch(bossGame._id, { status: "won" });
+
+            // Calculate rewards for all participants
+            const config = BOSS_CONFIG[bossGame.bossLevel as keyof typeof BOSS_CONFIG];
+            const totalPrize = Math.floor(
+                bossGame.participants.length * config.wager * config.multiplier
+            );
+            const perPlayerReward = Math.floor(totalPrize / bossGame.participants.length);
+
+            // Distribute rewards
+            for (const odId of bossGame.participants) {
+                if (!odId) continue;
+                const participant = await ctx.db.get(odId);
+                if (participant) {
+                    await ctx.db.patch(odId, {
+                        coins: participant.coins + perPlayerReward,
+                    });
+                }
+            }
+
+            await ctx.db.insert("messages", {
+                roomId: args.roomId,
+                userName: "System",
+                userAvatar: "🏆",
+                content: `VICTORY! ${config.name} has been defeated! Each player earned ${perPlayerReward} Gems!`,
+                type: "system",
+                createdAt: Date.now(),
+            });
+        }
+
+        return {
+            success: true,
+            damage: bingoDamage,
+            newHealth,
+            victory: newHealth <= 0,
+        };
     },
 });
 
