@@ -838,7 +838,7 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                             </button>
                         )}
                         {!isPlaying && !isFinished && roomDetails?.players?.length === 1 && (
-                            <div className="solo-hint">Playing solo? AI opponents will join when you start!</div>
+                            <div className="solo-hint">You can start solo or wait for others to join!</div>
                         )}
                         {isPlaying && (
                             <button className="btn btn-accent btn-large" onClick={handleClaimBingo}>
@@ -888,6 +888,14 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                     <button className="floating-bingo-btn" onClick={handleClaimBingo}>
                         <span className="fab-icon">🎉</span>
                         <span className="fab-text">BINGO!</span>
+                    </button>
+                )}
+
+                {/* Floating Start Button (Mobile) */}
+                {!isPlaying && !isFinished && (
+                    <button className="floating-start-btn" onClick={handleStartGame}>
+                        <span className="fab-icon">▶️</span>
+                        <span className="fab-text">START</span>
                     </button>
                 )}
 

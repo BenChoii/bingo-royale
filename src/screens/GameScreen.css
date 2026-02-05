@@ -1344,6 +1344,53 @@
     }
 }
 
+/* Floating Start Button (Mobile) */
+.floating-start-btn {
+    display: none;
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, hsl(145, 80%, 45%) 0%, hsl(160, 80%, 40%) 100%);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 8px 24px hsla(145, 80%, 50%, 0.4), 0 0 0 0 hsla(145, 80%, 50%, 0.7);
+    color: white;
+    cursor: pointer;
+    z-index: 150;
+    animation: pulse-ring-start 2s infinite;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+}
+
+.floating-start-btn .fab-icon {
+    font-size: 1.8rem;
+}
+
+.floating-start-btn .fab-text {
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+}
+
+@keyframes pulse-ring-start {
+    0% {
+        box-shadow: 0 8px 24px hsla(145, 80%, 50%, 0.4), 0 0 0 0 hsla(145, 80%, 50%, 0.7);
+    }
+
+    50% {
+        box-shadow: 0 8px 24px hsla(145, 80%, 50%, 0.4), 0 0 0 20px hsla(145, 80%, 50%, 0);
+    }
+
+    100% {
+        box-shadow: 0 8px 24px hsla(145, 80%, 50%, 0.4), 0 0 0 0 hsla(145, 80%, 50%, 0);
+    }
+}
+
+
 /* Boss Phase Styles */
 .game-over-header {
     text-align: center;
@@ -1649,7 +1696,8 @@
     }
 
     .mobile-nav,
-    .floating-bingo-btn {
+    .floating-bingo-btn,
+    .floating-start-btn {
         display: flex;
     }
 
