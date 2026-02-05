@@ -65,10 +65,7 @@ export const startGame = mutation({
         const room = await ctx.db.get(args.roomId);
         if (!room) return { success: false, error: "Room not found" };
 
-        // Only host can start INITIAL game, but anyone can start new rounds after game ends
-        if (room.status === "waiting" && room.hostId !== args.hostId) {
-            return { success: false, error: "Only host can start the first game" };
-        }
+        // Allow any player to start the game
         if (room.status !== "waiting" && room.status !== "finished") {
             return { success: false, error: "Game already in progress" };
         }
