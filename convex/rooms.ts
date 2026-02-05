@@ -131,28 +131,59 @@ export const joinRoom = mutation({
             await ctx.db.patch(room._id, { prizePool: room.prizePool + room.buyIn });
         }
 
-        // Generate bingo card for player
         const card = generateBingoCard();
+
+        // If joining mid-game, auto-daub already called numbers
+        let updatedCard = card;
+        let daubedCount = 1; // Free space
+
+        if (room.status === "playing") {
+            // Get the current game to find called numbers
+            const game = await ctx.db
+                .query("games")
+                .withIndex("by_room", (q) => q.eq("roomId", room._id))
+                .order("desc")
+                .first();
+
+            if (game && game.calledNumbers.length > 0) {
+                // Auto-daub all called numbers on the new player's card
+                updatedCard = card.map((row: any[]) =>
+                    row.map((cell: any) => {
+                        if (game.calledNumbers.includes(cell.value)) {
+                            return { ...cell, daubed: true };
+                        }
+                        return cell;
+                    })
+                );
+
+                // Count daubed cells
+                daubedCount = updatedCard.flat().filter((cell: any) => cell.daubed).length;
+            }
+        }
 
         // Add player to room
         await ctx.db.insert("roomPlayers", {
             roomId: room._id,
             odId: args.userId,
-            card,
-            daubedCount: 1, // Free space
-            distanceToBingo: 4, // Need 4 more for line
+            card: updatedCard,
+            daubedCount,
+            distanceToBingo: 4, // Will be recalculated
             isReady: false,
             hasCalledBingo: false,
             joinedAt: Date.now(),
         });
 
         // Send system message
+        const messageContent = room.status === "playing"
+            ? `${user.name} joined the game late! 🏃`
+            : `${user.name} joined the room!`;
+
         await ctx.db.insert("messages", {
             roomId: room._id,
             userId: args.userId,
             userName: "System",
             userAvatar: "👋",
-            content: `${user.name} joined the room!`,
+            content: messageContent,
             type: "system",
             createdAt: Date.now(),
         });

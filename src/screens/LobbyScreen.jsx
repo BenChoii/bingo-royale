@@ -275,7 +275,7 @@ export default function LobbyScreen({ userId, onJoinRoom, onLogout }) {
                                         onClick={() => handleJoinPublicRoom(room)}
                                         disabled={isJoining}
                                     >
-                                        {room.status === "playing" ? "🎮 Spectate" : "Join Lobby"}
+                                        {room.status === "playing" ? "⚡ Join Late" : "Join Lobby"}
                                     </button>
                                 </div>
                             );
