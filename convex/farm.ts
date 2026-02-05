@@ -718,3 +718,56 @@ export const sellGoods = mutation({
         return { success: true, sold: amount, gems: totalGems };
     },
 });
+
+// Butcher an animal for meat (permanently removes the animal)
+export const butcherAnimal = mutation({
+    args: {
+        userId: v.id("users"),
+        animalType: v.string(), // "cow" for beef, "pig" for pork, "sheep" for mutton
+    },
+    handler: async (ctx, args) => {
+        const MEAT_VALUES = {
+            cow: { meat: "beef", gems: 150, emoji: "🥩" },
+            pig: { meat: "pork", gems: 100, emoji: "🥓" },
+            sheep: { meat: "mutton", gems: 75, emoji: "🍖" },
+            chicken: { meat: "chicken", gems: 15, emoji: "🍗" },
+            duck: { meat: "duck", gems: 25, emoji: "🦆" },
+        };
+
+        const meatInfo = MEAT_VALUES[args.animalType as keyof typeof MEAT_VALUES];
+        if (!meatInfo) return { success: false, error: "Unknown animal type" };
+
+        const farm = await ctx.db
+            .query("farms")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .first();
+
+        if (!farm) return { success: false, error: "No farm found" };
+
+        const animalKey = args.animalType === "cow" ? "cows" :
+            args.animalType === "pig" ? "pigs" :
+                args.animalType === "sheep" ? "sheep" :
+                    args.animalType === "chicken" ? "chickens" : "ducks";
+
+        if (farm.animals[animalKey as keyof typeof farm.animals] <= 0) {
+            return { success: false, error: `No ${args.animalType} to butcher` };
+        }
+
+        const user = await ctx.db.get(args.userId);
+        if (!user) return { success: false, error: "User not found" };
+
+        // Remove one animal and give gems
+        const newAnimals = { ...farm.animals };
+        newAnimals[animalKey as keyof typeof newAnimals] -= 1;
+
+        await ctx.db.patch(farm._id, { animals: newAnimals });
+        await ctx.db.patch(args.userId, { coins: user.coins + meatInfo.gems });
+
+        return {
+            success: true,
+            meat: meatInfo.meat,
+            gems: meatInfo.gems,
+            emoji: meatInfo.emoji,
+        };
+    },
+});
