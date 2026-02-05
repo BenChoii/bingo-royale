@@ -89,7 +89,7 @@ export default defineSchema({
     // Chat Messages
     messages: defineTable({
         roomId: v.id("rooms"),
-        userId: v.id("users"),
+        userId: v.optional(v.id("users")), // Optional for system/bot messages
         userName: v.string(),
         userAvatar: v.string(),
         content: v.string(),
@@ -103,7 +103,7 @@ export default defineSchema({
 
     // Leaderboard entries
     leaderboard: defineTable({
-        userId: v.id("users"),
+        userId: v.optional(v.id("users")), // Optional for system/bot messages
         userName: v.string(),
         userAvatar: v.string(),
         period: v.union(
@@ -155,7 +155,7 @@ export default defineSchema({
 
     // Boss Battle Participation (Individual entries)
     bossBattles: defineTable({
-        userId: v.id("users"),
+        userId: v.optional(v.id("users")), // Optional for system/bot messages
         roomId: v.id("rooms"),
         bossGameId: v.optional(v.id("bossGames")),
         wager: v.number(),
@@ -168,7 +168,7 @@ export default defineSchema({
 
     // Lucky Line Minigame
     luckyLineGames: defineTable({
-        userId: v.id("users"),
+        userId: v.optional(v.id("users")), // Optional for system/bot messages
         lines: v.array(v.object({
             row: v.number(),
             col: v.number(),
@@ -199,7 +199,7 @@ export default defineSchema({
 
     // User Challenge Progress
     userChallenges: defineTable({
-        userId: v.id("users"),
+        userId: v.optional(v.id("users")), // Optional for system/bot messages
         date: v.string(),
         progress: v.array(v.object({
             type: v.string(),
@@ -221,7 +221,7 @@ export default defineSchema({
 
     // User Owned Cosmetics
     userCosmetics: defineTable({
-        userId: v.id("users"),
+        userId: v.optional(v.id("users")), // Optional for system/bot messages
         cosmeticId: v.id("cosmetics"),
         equipped: v.boolean(),
         purchasedAt: v.number(),
@@ -230,7 +230,7 @@ export default defineSchema({
 
     // Stripe Purchases (for idempotency)
     purchases: defineTable({
-        userId: v.id("users"),
+        userId: v.optional(v.id("users")), // Optional for system/bot messages
         sessionId: v.string(),
         gems: v.number(),
         createdAt: v.number(),
@@ -239,7 +239,7 @@ export default defineSchema({
 
     // User Subscriptions
     subscriptions: defineTable({
-        userId: v.id("users"),
+        userId: v.optional(v.id("users")), // Optional for system/bot messages
         stripeSubscriptionId: v.string(),
         stripePriceId: v.string(),
         tier: v.union(
@@ -263,7 +263,7 @@ export default defineSchema({
 
     // Bingo Farm - idle farming mini-game
     farms: defineTable({
-        userId: v.id("users"),
+        userId: v.optional(v.id("users")), // Optional for system/bot messages
         plots: v.array(v.object({
             cropType: v.optional(v.string()), // null = empty
             plantedAt: v.optional(v.number()),

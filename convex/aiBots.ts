@@ -56,7 +56,7 @@ export const addBotsToRoom = internalMutation({
             // Add bot as a player with isBot flag
             const botPlayerId = await ctx.db.insert("roomPlayers", {
                 roomId: args.roomId,
-                odId: null as any, // Bots don't have a user ID
+                odId: undefined, // Bots don't have a user ID
                 card,
                 daubedCount: 1, // Free space
                 distanceToBingo: 4,
@@ -75,7 +75,7 @@ export const addBotsToRoom = internalMutation({
         // Send system message
         await ctx.db.insert("messages", {
             roomId: args.roomId,
-            userId: null as any,
+            userId: undefined,
             userName: "System",
             userAvatar: "🤖",
             content: `${config.botCount} AI opponents have joined! Good luck!`,
@@ -150,7 +150,7 @@ export const botDaubNumber = internalMutation({
             // Send win message
             await ctx.db.insert("messages", {
                 roomId: game.roomId,
-                userId: null as any,
+                userId: undefined,
                 userName: "System",
                 userAvatar: "🏆",
                 content: `${botPlayer.botName} (AI) won the game! Better luck next time!`,
