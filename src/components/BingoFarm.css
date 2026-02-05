@@ -1,16 +1,126 @@
 /* Bingo Farm - Full screen and collapsed view */
 
-/* ========== COLLAPSED BAR ========== */
-.bingo-farm-collapsed {
+/* ========== WALKING ANIMALS ========== */
+.walking-animals-container {
     position: fixed;
-    bottom: 0;
+    bottom: 50px;
     left: 0;
     right: 0;
+    height: 40px;
+    pointer-events: none;
+    z-index: 999;
+    overflow: hidden;
+}
+
+.walking-animal {
+    position: absolute;
+    font-size: 1.8rem;
+    animation: walk-across 15s linear infinite;
+    bottom: 0;
+}
+
+@keyframes walk-across {
+    0% {
+        left: -50px;
+        transform: scaleX(1);
+    }
+
+    49% {
+        left: calc(100% + 50px);
+        transform: scaleX(1);
+    }
+
+    50% {
+        left: calc(100% + 50px);
+        transform: scaleX(-1);
+    }
+
+    99% {
+        left: -50px;
+        transform: scaleX(-1);
+    }
+
+    100% {
+        left: -50px;
+        transform: scaleX(1);
+    }
+}
+
+/* ========== MINIMAL COLLAPSED BAR ========== */
+.farm-bar-minimal {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 1000;
-    background: linear-gradient(to top, hsl(100, 35%, 12%) 0%, hsl(120, 30%, 18%) 100%);
-    border-top: 2px solid hsl(80, 50%, 35%);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
-    padding: 12px 16px;
+    background: hsla(100, 30%, 15%, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid hsla(80, 50%, 40%, 0.4);
+    border-bottom: none;
+    border-radius: 12px 12px 0 0;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.farm-bar-minimal:hover {
+    background: hsla(100, 35%, 18%, 0.95);
+    padding-bottom: 12px;
+}
+
+.crop-icons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.crop-icon {
+    font-size: 1.4rem;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+}
+
+.crop-icon.ready {
+    opacity: 1;
+    animation: pulse-ready 0.8s infinite alternate;
+}
+
+.ready-count {
+    font-size: 0.75rem;
+    color: hsl(80, 70%, 60%);
+    font-weight: 700;
+    margin-left: 4px;
+}
+
+.farm-hint {
+    font-size: 1.2rem;
+    opacity: 0.6;
+}
+
+.expand-hint {
+    font-size: 0.7rem;
+    color: hsla(0, 0%, 100%, 0.5);
+    animation: float-hint 1.5s ease-in-out infinite;
+}
+
+@keyframes float-hint {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+/* ========== OLD COLLAPSED BAR (deprecated) ========== */
+.bingo-farm-collapsed {
+    display: none;
 }
 
 .farm-bar {
@@ -905,4 +1015,84 @@
     .crop-rate {
         display: none;
     }
+}
+
+/* Compact animal/goods/eggs display */
+.animals-compact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.animals-compact span {
+    background: hsla(200, 30%, 20%, 0.6);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.goods-compact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.goods-compact button {
+    background: hsla(50, 40%, 25%, 0.7);
+    border: 1px solid hsla(50, 50%, 40%, 0.4);
+    padding: 8px 14px;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.goods-compact button:hover {
+    background: hsla(50, 45%, 30%, 0.8);
+}
+
+.eggs-compact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 10px;
+    background: hsla(40, 30%, 20%, 0.5);
+    border-radius: 8px;
+}
+
+.eggs-compact button {
+    background: hsla(120, 40%, 30%, 0.7);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: white;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.collect-btn {
+    background: linear-gradient(135deg, hsl(200, 60%, 40%), hsl(220, 50%, 35%));
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.farm-shop-btn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 14px;
+    background: linear-gradient(135deg, hsl(280, 50%, 40%), hsl(320, 45%, 35%));
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
 }

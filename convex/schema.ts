@@ -277,23 +277,23 @@ export default defineSchema({
             farmBot: v.boolean(), // Auto-replant
             sprinkler: v.boolean(), // 25% faster growth
         }),
-        // Animals - passive gem producers
-        animals: v.object({
+        // Animals - passive gem producers (optional for backwards compat)
+        animals: v.optional(v.object({
             chickens: v.number(), // Lay eggs
             ducks: v.number(), // Lay eggs  
             sheep: v.number(), // Produce wool (gems)
             cows: v.number(), // Produce milk (gems)
             pigs: v.number(), // Find truffles (gems)
-        }),
+        })),
         // Eggs - can be sold for 1 gem or hatched in 24h
-        eggs: v.array(v.object({
+        eggs: v.optional(v.array(v.object({
             type: v.string(), // "chicken" or "duck"
             laidAt: v.number(), // Timestamp
             nurturing: v.boolean(), // If being nurtured to hatch
-        })),
+        }))),
         lastAnimalCollect: v.optional(v.number()), // When animals last produced
-        // Inventory - consumables
-        inventory: v.object({
+        // Inventory - consumables (optional for backwards compat)
+        inventory: v.optional(v.object({
             seeds: v.number(), // Basic seeds
             fertilizer: v.number(), // 2x yield boost
             superFertilizer: v.number(), // 3x yield + instant grow
@@ -301,7 +301,7 @@ export default defineSchema({
             wool: v.number(), // From sheep, sell for 5 gems
             milk: v.number(), // From cows, sell for 10 gems
             truffles: v.number(), // From pigs, sell for 25 gems
-        }),
+        })),
         farmLevel: v.number(),
         farmXp: v.number(),
         totalHarvested: v.number(),

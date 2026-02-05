@@ -4,110 +4,48 @@ import { api } from "../../convex/_generated/api";
 import { useNotification } from "./Notifications";
 import "./BingoFarm.css";
 
-// BALANCED ECONOMY: Crops are FREE to plant (no cost), return gems on harvest
-// Longer crops = better gems/minute ratio (rewards patience)
+// Crop definitions with balanced economy
 const CROPS = {
-    // Quick crops - Low gems/min, good for active players
-    sprout: { name: "Sprouts", emoji: "🌱", growTime: 30000, gemYield: 2, unlockLevel: 1, gemsPerMin: 4 },
-    lettuce: { name: "Lettuce", emoji: "🥬", growTime: 60000, gemYield: 5, unlockLevel: 2, gemsPerMin: 5 },
-    radish: { name: "Radish", emoji: "🫛", growTime: 120000, gemYield: 12, unlockLevel: 3, gemsPerMin: 6 },
-
-    // Medium crops - Balanced
-    carrot: { name: "Carrots", emoji: "🥕", growTime: 180000, gemYield: 21, unlockLevel: 4, gemsPerMin: 7 },
-    potato: { name: "Potatoes", emoji: "🥔", growTime: 300000, gemYield: 40, unlockLevel: 5, gemsPerMin: 8 },
-    corn: { name: "Corn", emoji: "🌽", growTime: 600000, gemYield: 90, unlockLevel: 6, gemsPerMin: 9 },
-
-    // Long crops - High gems/min, rewards patience
-    tomato: { name: "Tomatoes", emoji: "🍅", growTime: 900000, gemYield: 150, unlockLevel: 8, gemsPerMin: 10 },
-    pepper: { name: "Peppers", emoji: "🌶️", growTime: 1200000, gemYield: 220, unlockLevel: 10, gemsPerMin: 11 },
-    strawberry: { name: "Strawberries", emoji: "🍓", growTime: 1800000, gemYield: 360, unlockLevel: 12, gemsPerMin: 12 },
-
-    // Premium crops - Best ROI for idle players
-    pumpkin: { name: "Pumpkins", emoji: "🎃", growTime: 2700000, gemYield: 580, unlockLevel: 15, gemsPerMin: 13 },
-    sunflower: { name: "Sunflowers", emoji: "🌻", growTime: 3600000, gemYield: 840, unlockLevel: 18, gemsPerMin: 14 },
-    crystalBeet: { name: "Crystal Beets", emoji: "💎", growTime: 7200000, gemYield: 1800, unlockLevel: 20, gemsPerMin: 15 },
+    sprout: { name: "Sprouts", emoji: "🌱", growTime: 30000, gemYield: 2, unlockLevel: 1 },
+    lettuce: { name: "Lettuce", emoji: "🥬", growTime: 60000, gemYield: 5, unlockLevel: 2 },
+    radish: { name: "Radish", emoji: "🫛", growTime: 120000, gemYield: 12, unlockLevel: 3 },
+    carrot: { name: "Carrots", emoji: "🥕", growTime: 180000, gemYield: 21, unlockLevel: 4 },
+    potato: { name: "Potatoes", emoji: "🥔", growTime: 300000, gemYield: 40, unlockLevel: 5 },
+    corn: { name: "Corn", emoji: "🌽", growTime: 600000, gemYield: 90, unlockLevel: 6 },
+    tomato: { name: "Tomatoes", emoji: "🍅", growTime: 900000, gemYield: 150, unlockLevel: 8 },
+    pepper: { name: "Peppers", emoji: "🌶️", growTime: 1200000, gemYield: 220, unlockLevel: 10 },
+    strawberry: { name: "Strawberries", emoji: "🍓", growTime: 1800000, gemYield: 360, unlockLevel: 12 },
+    pumpkin: { name: "Pumpkins", emoji: "🎃", growTime: 2700000, gemYield: 580, unlockLevel: 15 },
+    sunflower: { name: "Sunflowers", emoji: "🌻", growTime: 3600000, gemYield: 840, unlockLevel: 18 },
+    crystalBeet: { name: "Crystal Beets", emoji: "💎", growTime: 7200000, gemYield: 1800, unlockLevel: 20 },
 };
 
-// ANIMAL ECONOMY: Cost gems upfront, produce goods passively
-// ROI = break-even time, then pure profit
+// Animal info for shop
 const ANIMALS = {
-    chicken: {
-        emoji: "🐔", name: "Chicken", cost: 50,
-        produces: "eggs", produceEmoji: "🥚", producePerHour: 2,
-        sellPrice: 1, // per egg
-        butcherPrice: 10,
-        roiHours: 25, // 50 cost / (2 eggs * 1 gem) = 25h to break even
-    },
-    duck: {
-        emoji: "🦆", name: "Duck", cost: 100,
-        produces: "eggs", produceEmoji: "🥚", producePerHour: 3,
-        sellPrice: 1,
-        butcherPrice: 20,
-        roiHours: 33,
-    },
-    sheep: {
-        emoji: "🐑", name: "Sheep", cost: 200,
-        produces: "wool", produceEmoji: "🧶", producePerHour: 2,
-        sellPrice: 3, // per wool
-        butcherPrice: 50,
-        roiHours: 33,
-    },
-    cow: {
-        emoji: "🐄", name: "Cow", cost: 500,
-        produces: "milk", produceEmoji: "🥛", producePerHour: 2,
-        sellPrice: 8, // per milk
-        butcherPrice: 100,
-        roiHours: 31,
-    },
-    pig: {
-        emoji: "🐷", name: "Pig", cost: 1000,
-        produces: "truffles", produceEmoji: "🍄", producePerHour: 1,
-        sellPrice: 30, // per truffle
-        butcherPrice: 200,
-        roiHours: 33,
-    },
+    chicken: { emoji: "🐔", name: "Chicken", cost: 50, producePerHour: 2, sellPrice: 1, roiHours: 25 },
+    duck: { emoji: "🦆", name: "Duck", cost: 100, producePerHour: 3, sellPrice: 1, roiHours: 33 },
+    sheep: { emoji: "🐑", name: "Sheep", cost: 200, producePerHour: 2, sellPrice: 3, roiHours: 33 },
+    cow: { emoji: "🐄", name: "Cow", cost: 500, producePerHour: 2, sellPrice: 8, roiHours: 31 },
+    pig: { emoji: "🐷", name: "Pig", cost: 1000, producePerHour: 1, sellPrice: 30, roiHours: 33 },
 };
 
-// BOOSTS: Enhance farming efficiency
-const BOOSTS = {
-    fertilizer: {
-        emoji: "💩", name: "Fertilizer", cost: 20,
-        desc: "2x yield on next harvest",
-        details: "Apply to any growing crop. When harvested, get DOUBLE gems. Works once per use.",
-        uses: 5,
-    },
-    superGrow: {
-        emoji: "✨", name: "Super Grow", cost: 75,
-        desc: "Instant harvest + 2x yield",
-        details: "Immediately harvest any crop AND get double gems. Best used on long-growing crops!",
-        uses: 2,
-    },
-    waterCan: {
-        emoji: "💧", name: "Water Can", cost: 30,
-        desc: "Halve remaining grow time",
-        details: "Cuts the remaining time in half. Use when crop is 50%+ for best value!",
-        uses: 3,
-    },
-};
+// Animated animal component
+function WalkingAnimal({ type, index }) {
+    const animal = ANIMALS[type];
+    if (!animal) return null;
 
-// UPGRADES: Permanent improvements
-const UPGRADES = {
-    sprinkler: {
-        emoji: "💦", name: "Sprinkler", cost: 800,
-        desc: "All crops grow 25% faster",
-        details: "Permanent! Reduces grow time on ALL crops by 25%. Stacks with Water Can. Best long-term investment.",
-    },
-    farmBot: {
-        emoji: "🤖", name: "Farm Bot", cost: 2000,
-        desc: "Auto-replant after harvest",
-        details: "Permanent! When you harvest, the same crop auto-replants. Perfect for idle farming.",
-    },
-    extraPlot: {
-        emoji: "🏡", name: "Extra Plot", cost: 500,
-        desc: "Add 1 more farming plot",
-        details: "Expand your farm! More plots = more simultaneous crops = more gems per hour.",
-    },
-};
+    return (
+        <div
+            className="walking-animal"
+            style={{
+                animationDelay: `${index * 2}s`,
+                animationDuration: `${15 + index * 3}s`
+            }}
+        >
+            {animal.emoji}
+        </div>
+    );
+}
 
 export default function BingoFarm({ userId }) {
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -143,99 +81,86 @@ export default function BingoFarm({ userId }) {
 
     if (!farm || farm.isHidden) return null;
 
-    const getClosestToHarvest = () => {
-        const growing = farm.plots
-            .map((p, i) => ({ ...p, index: i }))
-            .filter(p => p.cropType && !p.isReady)
-            .sort((a, b) => (b.progress || 0) - (a.progress || 0));
-        return growing[0] || farm.plots.find(p => p.isReady) || farm.plots[0];
-    };
-
     const handlePlant = async (plotIndex) => {
-        const result = await plantCrop({ userId, plotIndex, cropType: selectedCrop });
-        if (result.success) {
-            showNotification(`Planted ${CROPS[selectedCrop]?.emoji}!`, "success");
-        } else {
-            showNotification(result.error || "Failed", "error");
+        try {
+            const result = await plantCrop({ userId, plotIndex, cropType: selectedCrop });
+            if (result?.success) {
+                showNotification(`Planted ${CROPS[selectedCrop]?.emoji}!`, "success");
+            } else {
+                showNotification(result?.error || "Failed", "error");
+            }
+        } catch (e) {
+            console.error("Plant error:", e);
         }
     };
 
     const handleHarvest = async () => {
-        const result = await harvestCrops({ userId });
-        if (result.success) {
-            showNotification(`+${result.gemsEarned} 💎 from ${result.harvested} crops!`, "success");
-        } else {
-            showNotification(result.error || "Nothing ready", "info");
+        try {
+            const result = await harvestCrops({ userId });
+            if (result?.success) {
+                showNotification(`+${result.gemsEarned} 💎!`, "success");
+            }
+        } catch (e) {
+            console.error("Harvest error:", e);
         }
     };
 
     const handleBuyItem = async (itemId) => {
         try {
             const result = await buyShopItem({ userId, itemId });
-            if (result.success) {
+            if (result?.success) {
                 showNotification(`Bought ${result.item}!`, "success");
                 setSelectedItem(null);
             } else {
-                showNotification(result.error || "Not enough gems", "error");
+                showNotification(result?.error || "Not enough gems", "error");
             }
-        } catch (err) {
+        } catch (e) {
+            console.error("Buy error:", e);
             showNotification("Purchase failed", "error");
         }
     };
 
     const handleCollectAnimals = async () => {
-        const result = await collectAnimalGems({ userId });
-        if (result.success) {
-            let msg = "Collected: ";
-            if (result.eggsLaid > 0) msg += `${result.eggsLaid} 🥚 `;
-            if (result.woolProduced > 0) msg += `${result.woolProduced} 🧶 `;
-            if (result.milkProduced > 0) msg += `${result.milkProduced} 🥛 `;
-            if (result.trufflesProduced > 0) msg += `${result.trufflesProduced} 🍄 `;
-            showNotification(msg, "success");
-        } else {
-            showNotification(result.error || "Wait 30min", "info");
+        try {
+            const result = await collectAnimalGems({ userId });
+            if (result?.success) {
+                let msg = "";
+                if (result.eggsLaid > 0) msg += `${result.eggsLaid}🥚 `;
+                if (result.woolProduced > 0) msg += `${result.woolProduced}🧶 `;
+                if (result.milkProduced > 0) msg += `${result.milkProduced}🥛 `;
+                if (result.trufflesProduced > 0) msg += `${result.trufflesProduced}🍄 `;
+                showNotification(msg || "Collected!", "success");
+            }
+        } catch (e) {
+            console.error("Collect error:", e);
         }
     };
 
     const handleSellAllEggs = async () => {
         const result = await sellAllEggs({ userId });
-        if (result.success) {
-            showNotification(`Sold ${result.sold} eggs = ${result.gems} 💎!`, "success");
-        }
-    };
-
-    const handleNurtureEgg = async (index) => {
-        const result = await nurtureEgg({ userId, eggIndex: index });
-        if (result.success) {
-            showNotification(`Nurturing egg (24h to hatch) 🐣`, "success");
-        }
+        if (result?.success) showNotification(`+${result.gems}💎`, "success");
     };
 
     const handleHatchEggs = async () => {
         const result = await hatchEggs({ userId });
-        if (result.success) {
-            let msg = "Hatched: ";
-            if (result.chickensHatched > 0) msg += `${result.chickensHatched} 🐔 `;
-            if (result.ducksHatched > 0) msg += `${result.ducksHatched} 🦆 `;
-            showNotification(msg, "success");
-        }
+        if (result?.success) showNotification("Hatched! 🐣", "success");
     };
 
     const handleSellGoods = async (goodType) => {
         const result = await sellGoods({ userId, goodType });
-        if (result.success) {
-            showNotification(`Sold for ${result.gems} 💎!`, "success");
-        }
+        if (result?.success) showNotification(`+${result.gems}💎`, "success");
     };
 
     const handleButcher = async (animalType) => {
-        const animal = ANIMALS[animalType];
-        if (!confirm(`Butcher ${animal.name}? Get ${animal.butcherPrice}💎 but lose the animal!`)) return;
+        if (!confirm(`Sell ${animalType}?`)) return;
         const result = await butcherAnimal({ userId, animalType });
-        if (result.success) {
-            showNotification(`+${result.gems} 💎`, "success");
-        }
+        if (result?.success) showNotification(`+${result.gems}💎`, "success");
     };
+
+    // Get crops that are ready or nearly ready (>75%)
+    const importantCrops = farm.plots
+        .filter(p => p.cropType && (p.isReady || (p.progress || 0) > 75))
+        .slice(0, 4);
 
     const readyCrops = farm.plots.filter(p => p.isReady).length;
     const availableCrops = Object.entries(CROPS).filter(
@@ -247,29 +172,26 @@ export default function BingoFarm({ userId }) {
 
     const eggs = farm.eggs || [];
     const sellableEggs = eggs.filter(e => !e.nurturing);
-    const readyToHatch = eggs.filter(e => e.nurturing && (now - e.laidAt) >= 24 * 60 * 60 * 1000);
-
-    const closestCrop = getClosestToHarvest();
-    const closestCropData = closestCrop?.cropType ? CROPS[closestCrop.cropType] : null;
+    const readyToHatch = eggs.filter(e => e.nurturing && (now - e.laidAt) >= 86400000);
 
     const formatTime = (ms) => {
-        if (ms <= 0) return "Ready!";
+        if (ms <= 0) return "✓";
         const seconds = Math.floor(ms / 1000);
         if (seconds < 60) return `${seconds}s`;
         const minutes = Math.floor(seconds / 60);
         if (minutes < 60) return `${minutes}m`;
-        const hours = Math.floor(minutes / 60);
-        return `${hours}h ${minutes % 60}m`;
+        return `${Math.floor(minutes / 60)}h`;
     };
 
-    // Calculate hourly income from animals
-    const hourlyIncome = farm.animals ? (
-        farm.animals.chickens * 2 * 1 +  // 2 eggs/hr * 1 gem
-        farm.animals.ducks * 3 * 1 +      // 3 eggs/hr * 1 gem
-        farm.animals.sheep * 2 * 3 +      // 2 wool/hr * 3 gems
-        farm.animals.cows * 2 * 8 +       // 2 milk/hr * 8 gems
-        farm.animals.pigs * 1 * 30        // 1 truffle/hr * 30 gems
-    ) : 0;
+    // Build list of owned animals for walking animation
+    const ownedAnimals = [];
+    if (farm.animals) {
+        for (let i = 0; i < farm.animals.chickens; i++) ownedAnimals.push({ type: 'chicken', i });
+        for (let i = 0; i < farm.animals.ducks; i++) ownedAnimals.push({ type: 'duck', i });
+        for (let i = 0; i < farm.animals.sheep; i++) ownedAnimals.push({ type: 'sheep', i });
+        for (let i = 0; i < farm.animals.cows; i++) ownedAnimals.push({ type: 'cow', i });
+        for (let i = 0; i < farm.animals.pigs; i++) ownedAnimals.push({ type: 'pig', i });
+    }
 
     // Full screen farm view
     if (isFullScreen) {
@@ -277,22 +199,16 @@ export default function BingoFarm({ userId }) {
             <div className="farm-fullscreen">
                 <div className="farm-fs-header">
                     <div className="farm-fs-title">
-                        <span>🌾</span>
-                        <span>Bingo Farm</span>
+                        🌾 <span>Farm</span>
                         <span className="farm-level-badge">Lv.{farm.farmLevel}</span>
-                    </div>
-                    <div className="farm-fs-stats">
-                        <span>💎 {farm.totalGemsEarned}</span>
-                        {hourlyIncome > 0 && <span className="income-badge">+{hourlyIncome}/hr</span>}
                     </div>
                     <button className="farm-fs-close" onClick={() => setIsFullScreen(false)}>✕</button>
                 </div>
 
                 <div className="farm-fs-content">
-                    {/* Crop selector with ROI info */}
+                    {/* Crop selector */}
                     <div className="farm-fs-section">
-                        <h3>🌱 Select Crop (FREE to plant!)</h3>
-                        <p className="section-tip">💡 Longer crops = better gems/minute. Patience pays!</p>
+                        <h3>🌱 Plant</h3>
                         <div className="crop-selector-large">
                             {availableCrops.map(([key, crop]) => (
                                 <button
@@ -301,21 +217,14 @@ export default function BingoFarm({ userId }) {
                                     onClick={() => setSelectedCrop(key)}
                                 >
                                     <span className="crop-emoji-lg">{crop.emoji}</span>
-                                    <span className="crop-name">{crop.name}</span>
-                                    <span className="crop-time">{formatTime(crop.growTime)}</span>
                                     <span className="crop-yield">+{crop.gemYield}💎</span>
-                                    <span className="crop-rate">{crop.gemsPerMin}💎/min</span>
                                 </button>
                             ))}
                         </div>
-                        {farm.helpers?.sprinkler && (
-                            <p className="synergy-active">💦 Sprinkler active: -25% grow time!</p>
-                        )}
                     </div>
 
                     {/* Farm plots */}
                     <div className="farm-fs-section">
-                        <h3>🌾 Your Farm ({farm.plotCount} plots, {readyCrops} ready)</h3>
                         <div className="farm-grid-large">
                             {farm.plots.slice(0, farm.plotCount).map((plot, index) => {
                                 const crop = plot.cropType ? CROPS[plot.cropType] : null;
@@ -335,9 +244,6 @@ export default function BingoFarm({ userId }) {
                                                         <div className="plot-progress-fill-lg" style={{ width: `${plot.progress || 0}%` }} />
                                                     </div>
                                                 )}
-                                                <span className="plot-status">
-                                                    {plot.isReady ? `+${crop?.gemYield}💎` : `${Math.round(plot.progress || 0)}%`}
-                                                </span>
                                             </>
                                         ) : (
                                             <span className="empty-plot-lg">+</span>
@@ -346,124 +252,57 @@ export default function BingoFarm({ userId }) {
                                 );
                             })}
                         </div>
-                        <button className="harvest-btn-large" onClick={handleHarvest} disabled={readyCrops === 0}>
-                            🌾 Harvest All ({readyCrops})
-                        </button>
+                        {readyCrops > 0 && (
+                            <button className="harvest-btn-large" onClick={handleHarvest}>
+                                🌾 Harvest ({readyCrops})
+                            </button>
+                        )}
                     </div>
 
-                    {/* Animals & Production */}
-                    {(totalAnimals > 0 || eggs.length > 0) && (
+                    {/* Animals & goods */}
+                    {(totalAnimals > 0 || eggs.length > 0 || farm.inventory?.wool > 0 || farm.inventory?.milk > 0 || farm.inventory?.truffles > 0) && (
                         <div className="farm-fs-section">
-                            <h3>🐾 Animals ({totalAnimals}) - Earning {hourlyIncome}💎/hour</h3>
+                            <h3>🐾 Animals</h3>
+                            <div className="animals-compact">
+                                {farm.animals?.chickens > 0 && <span>🐔×{farm.animals.chickens}</span>}
+                                {farm.animals?.ducks > 0 && <span>🦆×{farm.animals.ducks}</span>}
+                                {farm.animals?.sheep > 0 && <span>🐑×{farm.animals.sheep}</span>}
+                                {farm.animals?.cows > 0 && <span>🐄×{farm.animals.cows}</span>}
+                                {farm.animals?.pigs > 0 && <span>🐷×{farm.animals.pigs}</span>}
+                            </div>
                             {totalAnimals > 0 && (
-                                <>
-                                    <div className="animals-grid-large">
-                                        {farm.animals?.chickens > 0 && (
-                                            <div className="animal-card">
-                                                <span className="animal-emoji-lg">🐔 ×{farm.animals.chickens}</span>
-                                                <span className="animal-rate">{farm.animals.chickens * 2}🥚/hr</span>
-                                                <button className="butcher-btn" onClick={() => handleButcher("chicken")}>Sell 10💎</button>
-                                            </div>
-                                        )}
-                                        {farm.animals?.ducks > 0 && (
-                                            <div className="animal-card">
-                                                <span className="animal-emoji-lg">🦆 ×{farm.animals.ducks}</span>
-                                                <span className="animal-rate">{farm.animals.ducks * 3}🥚/hr</span>
-                                                <button className="butcher-btn" onClick={() => handleButcher("duck")}>Sell 20💎</button>
-                                            </div>
-                                        )}
-                                        {farm.animals?.sheep > 0 && (
-                                            <div className="animal-card">
-                                                <span className="animal-emoji-lg">🐑 ×{farm.animals.sheep}</span>
-                                                <span className="animal-rate">{farm.animals.sheep * 2}🧶/hr = {farm.animals.sheep * 6}💎</span>
-                                                <button className="butcher-btn" onClick={() => handleButcher("sheep")}>Sell 50💎</button>
-                                            </div>
-                                        )}
-                                        {farm.animals?.cows > 0 && (
-                                            <div className="animal-card">
-                                                <span className="animal-emoji-lg">🐄 ×{farm.animals.cows}</span>
-                                                <span className="animal-rate">{farm.animals.cows * 2}🥛/hr = {farm.animals.cows * 16}💎</span>
-                                                <button className="butcher-btn" onClick={() => handleButcher("cow")}>Sell 100💎</button>
-                                            </div>
-                                        )}
-                                        {farm.animals?.pigs > 0 && (
-                                            <div className="animal-card">
-                                                <span className="animal-emoji-lg">🐷 ×{farm.animals.pigs}</span>
-                                                <span className="animal-rate">{farm.animals.pigs}🍄/hr = {farm.animals.pigs * 30}💎</span>
-                                                <button className="butcher-btn" onClick={() => handleButcher("pig")}>Sell 200💎</button>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <button className="collect-btn-large" onClick={handleCollectAnimals}>
-                                        🐾 Collect Goods (every 30min)
-                                    </button>
-                                </>
+                                <button className="collect-btn" onClick={handleCollectAnimals}>Collect</button>
                             )}
 
+                            {/* Goods */}
+                            <div className="goods-compact">
+                                {farm.inventory?.wool > 0 && (
+                                    <button onClick={() => handleSellGoods("wool")}>🧶{farm.inventory.wool} → {farm.inventory.wool * 3}💎</button>
+                                )}
+                                {farm.inventory?.milk > 0 && (
+                                    <button onClick={() => handleSellGoods("milk")}>🥛{farm.inventory.milk} → {farm.inventory.milk * 8}💎</button>
+                                )}
+                                {farm.inventory?.truffles > 0 && (
+                                    <button onClick={() => handleSellGoods("truffles")}>🍄{farm.inventory.truffles} → {farm.inventory.truffles * 30}💎</button>
+                                )}
+                            </div>
+
+                            {/* Eggs */}
                             {eggs.length > 0 && (
-                                <div className="eggs-section">
-                                    <h4>🥚 Eggs ({eggs.length}) - Sell 1💎 each OR hatch in 24h for FREE animal!</h4>
-                                    <div className="eggs-grid-large">
-                                        {eggs.slice(0, 20).map((egg, i) => {
-                                            const isReady = egg.nurturing && (now - egg.laidAt) >= 24 * 60 * 60 * 1000;
-                                            const timeLeft = egg.nurturing ? Math.max(0, 24 * 60 * 60 * 1000 - (now - egg.laidAt)) : 0;
-                                            return (
-                                                <div
-                                                    key={i}
-                                                    className={`egg-item-lg ${egg.nurturing ? "nurturing" : ""} ${isReady ? "ready" : ""}`}
-                                                    onClick={() => !egg.nurturing && handleNurtureEgg(i)}
-                                                >
-                                                    🥚
-                                                    {egg.nurturing && !isReady && <span className="egg-timer-lg">{formatTime(timeLeft)}</span>}
-                                                    {isReady && <span className="egg-hatch">🐣</span>}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                    <div className="egg-actions-lg">
-                                        {sellableEggs.length > 0 && (
-                                            <button className="action-btn sell" onClick={handleSellAllEggs}>
-                                                💰 Sell All ({sellableEggs.length}) = {sellableEggs.length}💎
-                                            </button>
-                                        )}
-                                        {readyToHatch.length > 0 && (
-                                            <button className="action-btn hatch" onClick={handleHatchEggs}>
-                                                🐣 Hatch ({readyToHatch.length}) FREE animals!
-                                            </button>
-                                        )}
-                                    </div>
+                                <div className="eggs-compact">
+                                    <span>🥚×{eggs.length}</span>
+                                    {sellableEggs.length > 0 && (
+                                        <button onClick={handleSellAllEggs}>Sell {sellableEggs.length}💎</button>
+                                    )}
+                                    {readyToHatch.length > 0 && (
+                                        <button onClick={handleHatchEggs}>Hatch {readyToHatch.length}🐣</button>
+                                    )}
                                 </div>
                             )}
                         </div>
                     )}
 
-                    {/* Goods to sell */}
-                    {(farm.inventory?.wool > 0 || farm.inventory?.milk > 0 || farm.inventory?.truffles > 0) && (
-                        <div className="farm-fs-section">
-                            <h3>📦 Goods Ready to Sell</h3>
-                            <div className="goods-grid-large">
-                                {farm.inventory?.wool > 0 && (
-                                    <button className="good-btn" onClick={() => handleSellGoods("wool")}>
-                                        🧶 ×{farm.inventory.wool} → {farm.inventory.wool * 3}💎
-                                    </button>
-                                )}
-                                {farm.inventory?.milk > 0 && (
-                                    <button className="good-btn" onClick={() => handleSellGoods("milk")}>
-                                        🥛 ×{farm.inventory.milk} → {farm.inventory.milk * 8}💎
-                                    </button>
-                                )}
-                                {farm.inventory?.truffles > 0 && (
-                                    <button className="good-btn" onClick={() => handleSellGoods("truffles")}>
-                                        🍄 ×{farm.inventory.truffles} → {farm.inventory.truffles * 30}💎
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    <button className="farm-shop-btn-large" onClick={() => setShowShop(true)}>
-                        🏪 Open Shop
-                    </button>
+                    <button className="farm-shop-btn" onClick={() => setShowShop(true)}>🏪 Shop</button>
                 </div>
 
                 {/* Shop Modal */}
@@ -471,99 +310,75 @@ export default function BingoFarm({ userId }) {
                     <div className="farm-shop-overlay" onClick={() => { setShowShop(false); setSelectedItem(null); }}>
                         <div className="farm-shop-modal" onClick={e => e.stopPropagation()}>
                             <div className="shop-header">
-                                <h2>🏪 Farm Shop</h2>
-                                <button className="shop-close" onClick={() => { setShowShop(false); setSelectedItem(null); }}>✕</button>
+                                <h2>🏪 Shop</h2>
+                                <button className="shop-close" onClick={() => setShowShop(false)}>✕</button>
                             </div>
 
                             <div className="shop-tabs">
-                                <button className={`shop-tab ${shopTab === "animals" ? "active" : ""}`} onClick={() => setShopTab("animals")}>🐾 Animals</button>
-                                <button className={`shop-tab ${shopTab === "boosts" ? "active" : ""}`} onClick={() => setShopTab("boosts")}>⚡ Boosts</button>
-                                <button className={`shop-tab ${shopTab === "upgrades" ? "active" : ""}`} onClick={() => setShopTab("upgrades")}>⚙️ Upgrades</button>
+                                <button className={`shop-tab ${shopTab === "animals" ? "active" : ""}`} onClick={() => setShopTab("animals")}>🐾</button>
+                                <button className={`shop-tab ${shopTab === "boosts" ? "active" : ""}`} onClick={() => setShopTab("boosts")}>⚡</button>
+                                <button className={`shop-tab ${shopTab === "upgrades" ? "active" : ""}`} onClick={() => setShopTab("upgrades")}>⚙️</button>
                             </div>
 
                             <div className="shop-content">
                                 {shopTab === "animals" && (
-                                    <>
-                                        <p className="shop-tip">💡 Animals produce goods passively every hour. Sell goods for gems, or hatch eggs for FREE animals!</p>
-                                        <div className="shop-items-grid">
-                                            {Object.entries(ANIMALS).map(([id, animal]) => (
-                                                <button
-                                                    key={id}
-                                                    className={`shop-item-card ${selectedItem?.id === id ? "selected" : ""}`}
-                                                    onClick={() => setSelectedItem({ id, ...animal })}
-                                                >
-                                                    <span className="item-emoji">{animal.emoji}</span>
-                                                    <span className="item-name">{animal.name}</span>
-                                                    <span className="item-production">
-                                                        {animal.producePerHour}{animal.produceEmoji}/hr = {animal.producePerHour * animal.sellPrice}💎/hr
-                                                    </span>
-                                                    <span className="item-roi">ROI: ~{animal.roiHours}h</span>
-                                                    <span className="item-cost">{animal.cost} 💎</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </>
+                                    <div className="shop-items-grid">
+                                        {Object.entries(ANIMALS).map(([id, animal]) => (
+                                            <button
+                                                key={id}
+                                                className={`shop-item-card ${selectedItem?.id === id ? "selected" : ""}`}
+                                                onClick={() => setSelectedItem({ id, ...animal })}
+                                            >
+                                                <span className="item-emoji">{animal.emoji}</span>
+                                                <span className="item-cost">{animal.cost}💎</span>
+                                                <span className="item-roi">~{animal.roiHours}h ROI</span>
+                                            </button>
+                                        ))}
+                                    </div>
                                 )}
 
                                 {shopTab === "boosts" && (
-                                    <>
-                                        <p className="shop-tip">💡 Boosts multiply your crop yields. Use on expensive crops for best value!</p>
-                                        <div className="shop-items-grid">
-                                            {Object.entries(BOOSTS).map(([id, boost]) => (
-                                                <button
-                                                    key={id}
-                                                    className={`shop-item-card ${selectedItem?.id === id ? "selected" : ""}`}
-                                                    onClick={() => setSelectedItem({ id, ...boost })}
-                                                >
-                                                    <span className="item-emoji">{boost.emoji}</span>
-                                                    <span className="item-name">{boost.name}</span>
-                                                    <span className="item-desc">{boost.desc}</span>
-                                                    <span className="item-uses">×{boost.uses} uses</span>
-                                                    <span className="item-cost">{boost.cost} 💎</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </>
+                                    <div className="shop-items-grid">
+                                        <button className="shop-item-card" onClick={() => handleBuyItem("fertilizer")}>
+                                            <span className="item-emoji">💩</span>
+                                            <span className="item-cost">20💎</span>
+                                            <span className="item-desc">2x yield</span>
+                                        </button>
+                                        <button className="shop-item-card" onClick={() => handleBuyItem("superGrow")}>
+                                            <span className="item-emoji">✨</span>
+                                            <span className="item-cost">75💎</span>
+                                            <span className="item-desc">Instant</span>
+                                        </button>
+                                        <button className="shop-item-card" onClick={() => handleBuyItem("waterCan")}>
+                                            <span className="item-emoji">💧</span>
+                                            <span className="item-cost">30💎</span>
+                                            <span className="item-desc">50% faster</span>
+                                        </button>
+                                    </div>
                                 )}
 
                                 {shopTab === "upgrades" && (
-                                    <>
-                                        <p className="shop-tip">💡 Upgrades are permanent! They compound over time for massive long-term value.</p>
-                                        <div className="shop-items-grid">
-                                            {Object.entries(UPGRADES).map(([id, upgrade]) => (
-                                                <button
-                                                    key={id}
-                                                    className={`shop-item-card ${selectedItem?.id === id ? "selected" : ""}`}
-                                                    onClick={() => setSelectedItem({ id, ...upgrade })}
-                                                >
-                                                    <span className="item-emoji">{upgrade.emoji}</span>
-                                                    <span className="item-name">{upgrade.name}</span>
-                                                    <span className="item-desc">{upgrade.desc}</span>
-                                                    <span className="item-permanent">PERMANENT</span>
-                                                    <span className="item-cost">{upgrade.cost} 💎</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </>
+                                    <div className="shop-items-grid">
+                                        <button className="shop-item-card" onClick={() => handleBuyItem("sprinkler")}>
+                                            <span className="item-emoji">💦</span>
+                                            <span className="item-cost">800💎</span>
+                                            <span className="item-desc">-25% time</span>
+                                        </button>
+                                        <button className="shop-item-card" onClick={() => handleBuyItem("farmBot")}>
+                                            <span className="item-emoji">🤖</span>
+                                            <span className="item-cost">2000💎</span>
+                                            <span className="item-desc">Auto-plant</span>
+                                        </button>
+                                    </div>
                                 )}
 
                                 {selectedItem && (
                                     <div className="item-details">
                                         <h4>{selectedItem.emoji} {selectedItem.name}</h4>
-                                        <p className="item-details-text">{selectedItem.details}</p>
-                                        {selectedItem.roiHours && (
-                                            <p className="roi-calc">
-                                                📊 <strong>Investment Analysis:</strong><br />
-                                                Cost: {selectedItem.cost}💎<br />
-                                                Produces: {selectedItem.producePerHour} {selectedItem.produceEmoji} per hour<br />
-                                                Each sells for: {selectedItem.sellPrice}💎<br />
-                                                Hourly income: {selectedItem.producePerHour * selectedItem.sellPrice}💎/hr<br />
-                                                Break-even: ~{selectedItem.roiHours} hours<br />
-                                                <em>After that, pure profit forever!</em>
-                                            </p>
-                                        )}
+                                        <p>Makes {selectedItem.producePerHour}/hr → {selectedItem.producePerHour * selectedItem.sellPrice}💎/hr</p>
+                                        <p>Break-even: ~{selectedItem.roiHours}h</p>
                                         <button className="buy-btn" onClick={() => handleBuyItem(selectedItem.id)}>
-                                            Buy for {selectedItem.cost} 💎
+                                            Buy {selectedItem.cost}💎
                                         </button>
                                     </div>
                                 )}
@@ -575,41 +390,35 @@ export default function BingoFarm({ userId }) {
         );
     }
 
-    // Collapsed bar
+    // MINIMAL collapsed bar - just crop icons
     return (
-        <div className="bingo-farm-collapsed">
-            <div className="farm-bar" onClick={() => setIsFullScreen(true)}>
-                <div className="farm-bar-left">
-                    <span className="farm-icon">🌾</span>
-                    <span className="farm-level-sm">Lv.{farm.farmLevel}</span>
-                    {hourlyIncome > 0 && <span className="income-badge-sm">+{hourlyIncome}/hr</span>}
-                </div>
-
-                <div className="farm-preview">
-                    {closestCrop?.cropType ? (
-                        <div className={`preview-crop ${closestCrop.isReady ? "ready" : ""}`}>
-                            <span className="preview-emoji">{closestCropData?.emoji}</span>
-                            {closestCrop.isReady ? (
-                                <span className="preview-status ready">+{closestCropData?.gemYield}💎</span>
-                            ) : (
-                                <>
-                                    <div className="preview-bar">
-                                        <div className="preview-fill" style={{ width: `${closestCrop.progress || 0}%` }} />
-                                    </div>
-                                    <span className="preview-pct">{Math.round(closestCrop.progress || 0)}%</span>
-                                </>
-                            )}
-                        </div>
-                    ) : (
-                        <span className="preview-empty">Tap to farm 🌱</span>
-                    )}
-                </div>
-
-                <div className="farm-bar-right">
-                    {readyCrops > 0 && <span className="ready-badge-sm">{readyCrops} ready</span>}
-                    <span className="expand-arrow">▲</span>
-                </div>
+        <>
+            {/* Walking animals across screen */}
+            <div className="walking-animals-container">
+                {ownedAnimals.slice(0, 5).map((a, i) => (
+                    <WalkingAnimal key={`${a.type}-${i}`} type={a.type} index={i} />
+                ))}
             </div>
-        </div>
+
+            {/* Minimal farm bar */}
+            <div className="farm-bar-minimal" onClick={() => setIsFullScreen(true)}>
+                {importantCrops.length > 0 ? (
+                    <div className="crop-icons">
+                        {importantCrops.map((plot, i) => (
+                            <span
+                                key={i}
+                                className={`crop-icon ${plot.isReady ? "ready" : ""}`}
+                            >
+                                {CROPS[plot.cropType]?.emoji}
+                            </span>
+                        ))}
+                        {readyCrops > 0 && <span className="ready-count">{readyCrops}✓</span>}
+                    </div>
+                ) : (
+                    <span className="farm-hint">🌱</span>
+                )}
+                <span className="expand-hint">▲</span>
+            </div>
+        </>
     );
 }
