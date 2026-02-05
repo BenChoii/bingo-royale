@@ -621,8 +621,8 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                     )}
                 </div>
 
-                {/* Mobile Opponents Strip - Always visible */}
-                <div className="mobile-opponents-strip">
+                {/* Mobile Opponents Strip - Always visible when targeting */}
+                <div className={`mobile-opponents-strip ${targeting ? 'is-targeting' : ''}`}>
                     <div className="opponents-scroll">
                         {gameState?.players?.filter(p => p.odId !== userId).map((player) => {
                             const isFrozen = player.frozenUntil && player.frozenUntil > Date.now();
