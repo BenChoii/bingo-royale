@@ -6,6 +6,49 @@
     color: white;
 }
 
+/* Loading screen */
+.game-screen.loading-screen {
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-content {
+    text-align: center;
+    animation: fade-in 0.3s ease;
+}
+
+.loading-content .loading-spinner {
+    font-size: 4rem;
+    display: block;
+    animation: spin 2s linear infinite;
+}
+
+.loading-content p {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    color: hsla(0, 0%, 100%, 0.7);
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
 .game-header {
     display: flex;
     justify-content: space-between;

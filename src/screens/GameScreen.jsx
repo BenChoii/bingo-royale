@@ -314,6 +314,18 @@ export default function GameScreen({ userId, roomId, onLeave }) {
 
 
 
+    // Show loading while data is being fetched
+    if (!roomDetails || !user) {
+        return (
+            <div className="game-screen loading-screen">
+                <div className="loading-content">
+                    <span className="loading-spinner">🎱</span>
+                    <p>Loading game...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="game-screen">
             {/* Header */}
