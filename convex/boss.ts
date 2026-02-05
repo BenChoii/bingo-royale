@@ -649,15 +649,27 @@ export const getActiveBoss = query({
 
         if (!bossGame) return null;
 
-        // Only return boss if it's actively relevant:
-        // - "preparing" or "active" -> always show
-        // - "won" or "lost" -> only show if finished recently (within 60s) for the result screen
+        // Get current room status
+        const room = await ctx.db.get(args.roomId);
+
+        // If room is waiting or playing a NEW game, don't show old boss results
+        if (room?.status === "waiting" || room?.status === "playing") {
+            // Only show if boss is currently preparing or active for THIS game
+            if (bossGame.status === "preparing" || bossGame.status === "active") {
+                return bossGame;
+            }
+            // Otherwise, old boss results shouldn't appear during a new game
+            return null;
+        }
+
+        // Room is "finished" - show boss results as appropriate
         if (bossGame.status === "preparing" || bossGame.status === "active") {
             return bossGame;
         }
 
-        // For won/lost, check if it was recent (show result briefly)
-        const isRecent = bossGame.expiresAt && (Date.now() - bossGame.expiresAt) < 60000;
+        // For won/lost, show result briefly (within 2 minutes of the game ending)
+        const gameEnd = bossGame.expiresAt || Date.now();
+        const isRecent = (Date.now() - gameEnd) < 120000 && room?.status === "finished";
         if (isRecent) {
             return bossGame;
         }
