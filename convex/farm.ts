@@ -199,7 +199,7 @@ export const harvestCrops = mutation({
         let totalXp = 0;
         let harvestCount = 0;
 
-        const updatedPlots = farm.plots.map((plot) => {
+        let updatedPlots = farm.plots.map((plot) => {
             if (plot.cropType && plot.plantedAt && plot.growTime) {
                 // Calculate effective grow time with bonuses
                 let effectiveGrowTime = plot.growTime;
@@ -239,6 +239,25 @@ export const harvestCrops = mutation({
             return { success: false, error: "No crops ready to harvest" };
         }
 
+        // FarmBot auto-plant: if enabled, replant sprouts in all cleared plots
+        let autoPlantedCount = 0;
+        if (farm.helpers.farmBot) {
+            const sproutCrop = CROPS.sprout;
+            updatedPlots = updatedPlots.map((plot) => {
+                if (!plot.cropType) {
+                    autoPlantedCount++;
+                    return {
+                        cropType: "sprout",
+                        plantedAt: Date.now(),
+                        growTime: sproutCrop.growTime,
+                        isReady: false,
+                        fertilized: false,
+                    };
+                }
+                return plot;
+            });
+        }
+
         // Calculate new farm level
         let newXp = farm.farmXp + totalXp;
         let newLevel = farm.farmLevel;
@@ -268,6 +287,7 @@ export const harvestCrops = mutation({
             harvested: harvestCount,
             leveledUp: newLevel > farm.farmLevel,
             newLevel,
+            autoPlanted: autoPlantedCount, // FarmBot auto-planted count
         };
     },
 });
@@ -434,11 +454,26 @@ export const buyShopItem = mutation({
             const currentEggs = farm.eggs || [];
             await ctx.db.patch(farm._id, { animals: newAnimals, eggs: currentEggs });
         } else if (item.type === "upgrade" && "upgrade" in item) {
-            // Handle upgrade items (sprinkler, farmBot)
+            // Handle upgrade items (sprinkler, farmBot, extraPlot)
             if (item.upgrade === "sprinkler") {
                 await ctx.db.patch(farm._id, { helpers: { ...farm.helpers, sprinkler: true } });
             } else if (item.upgrade === "farmBot") {
                 await ctx.db.patch(farm._id, { helpers: { ...farm.helpers, farmBot: true } });
+            } else if (item.upgrade === "extraPlot") {
+                // Add a new empty plot
+                if (farm.plotCount >= 12) {
+                    // Refund gems since we can't add more
+                    await ctx.db.patch(args.userId, { coins: user.coins });
+                    return { success: false, error: "Max plots reached (12)" };
+                }
+                const updatedPlots = [
+                    ...farm.plots,
+                    { cropType: undefined, plantedAt: undefined, growTime: undefined, isReady: false, fertilized: false },
+                ];
+                await ctx.db.patch(farm._id, {
+                    plots: updatedPlots,
+                    plotCount: farm.plotCount + 1,
+                });
             }
         }
 
@@ -567,6 +602,55 @@ export const useFertilizer = mutation({
         });
 
         return { success: true };
+    },
+});
+
+// Use water can on a plot to speed up by 50%
+export const useWaterCan = mutation({
+    args: {
+        userId: v.id("users"),
+        plotIndex: v.number(),
+    },
+    handler: async (ctx, args) => {
+        const farm = await ctx.db
+            .query("farms")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .first();
+
+        if (!farm) return { success: false, error: "No farm found" };
+
+        const inventory = farm.inventory || { seeds: 0, fertilizer: 0, superFertilizer: 0, waterCan: 0, wool: 0, milk: 0, truffles: 0 };
+        if ((inventory.waterCan || 0) <= 0) {
+            return { success: false, error: "No water can in inventory" };
+        }
+
+        const plot = farm.plots[args.plotIndex];
+        if (!plot || !plot.cropType || !plot.plantedAt || !plot.growTime) {
+            return { success: false, error: "No crop in this plot" };
+        }
+
+        if (plot.isReady) {
+            return { success: false, error: "Crop is already ready" };
+        }
+
+        // Speed up by 50% - reduce the remaining grow time
+        const now = Date.now();
+        const elapsed = now - plot.plantedAt;
+        const remaining = plot.growTime - elapsed;
+        const newGrowTime = plot.growTime - Math.floor(remaining * 0.5); // Cut remaining time in half
+
+        const updatedPlots = [...farm.plots];
+        updatedPlots[args.plotIndex] = { ...plot, growTime: newGrowTime };
+
+        const newInventory = { ...inventory };
+        newInventory.waterCan = (newInventory.waterCan || 0) - 1;
+
+        await ctx.db.patch(farm._id, {
+            plots: updatedPlots,
+            inventory: newInventory,
+        });
+
+        return { success: true, timeReduced: Math.floor(remaining * 0.5) };
     },
 });
 

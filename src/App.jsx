@@ -4,6 +4,7 @@ import GameScreen from "./screens/GameScreen";
 import LoginScreen from "./screens/LoginScreen";
 import LobbyScreen from "./screens/LobbyScreen";
 import BingoFarm from "./components/BingoFarm";
+import { IntroPlayer } from "./remotion";
 import "./App.css";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
 import { useQuery, useMutation } from "convex/react";
@@ -50,6 +51,10 @@ function RoomJoinHandler({ userId, onJoinRoom }) {
 function AppContent() {
   const { user, isLoaded } = useUser();
   const [currentRoom, setCurrentRoom] = useState(null);
+  const [showIntro, setShowIntro] = useState(() => {
+    // Only show intro once per session
+    return !sessionStorage.getItem("bingo_intro_seen");
+  });
   const navigate = useNavigate();
 
   // Find the Convex user based on Clerk ID
@@ -81,6 +86,16 @@ function AppContent() {
 
   return (
     <div className="app">
+      {/* Intro animation - shows once per session */}
+      {showIntro && (
+        <IntroPlayer
+          onComplete={() => {
+            sessionStorage.setItem("bingo_intro_seen", "true");
+            setShowIntro(false);
+          }}
+        />
+      )}
+
       <SignedOut>
         <LoginScreen />
       </SignedOut>

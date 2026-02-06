@@ -12,14 +12,14 @@
   "dependencies": {
     "@clerk/clerk-react": "^5.60.0",
     "@remotion/cli": "^4.0.417",
-    "@remotion/player": "^4.0.417",
+    "@remotion/player": "4.0.419",
     "@stripe/stripe-js": "^8.7.0",
     "convex": "^1.31.7",
     "framer-motion": "^12.31.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.0",
-    "remotion": "^4.0.417",
+    "remotion": "4.0.419",
     "stripe": "^20.3.0"
   },
   "devDependencies": {

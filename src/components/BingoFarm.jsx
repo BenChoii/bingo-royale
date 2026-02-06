@@ -62,6 +62,7 @@ export default function BingoFarm({ userId }) {
     const [showShop, setShowShop] = useState(false);
     const [shopTab, setShopTab] = useState("animals");
     const [selectedItem, setSelectedItem] = useState(null);
+    const [selectedPlot, setSelectedPlot] = useState(null);
     const [now, setNow] = useState(Date.now());
     const { showNotification } = useNotification();
 
@@ -76,6 +77,8 @@ export default function BingoFarm({ userId }) {
     const hatchEggs = useMutation(api.farm.hatchEggs);
     const sellGoods = useMutation(api.farm.sellGoods);
     const butcherAnimal = useMutation(api.farm.butcherAnimal);
+    const useFertilizerMut = useMutation(api.farm.useFertilizer);
+    const useWaterCan = useMutation(api.farm.useWaterCan);
 
     useEffect(() => {
         const interval = setInterval(() => setNow(Date.now()), 1000);
@@ -107,12 +110,43 @@ export default function BingoFarm({ userId }) {
         try {
             const result = await harvestCrops({ userId });
             if (result?.success) {
-                showNotification(`+${result.gemsEarned} 💎 from ${result.harvested} crops!`, "success");
+                let msg = `🌾 +${result.gemsEarned}💎 from ${result.harvested} crops!`;
+                if (result.autoPlanted > 0) msg += ` 🤖 Auto-planted ${result.autoPlanted}`;
+                if (result.leveledUp) msg += ` 🎉 Level ${result.newLevel}!`;
+                showNotification(msg, "success");
             } else {
                 showNotification(result?.error || "No crops ready", "error");
             }
         } catch (e) {
             console.error("Harvest error:", e);
+        }
+    };
+
+    const handleUseFertilizer = async (plotIndex, type) => {
+        try {
+            const result = await useFertilizerMut({ userId, plotIndex, type });
+            if (result?.success) {
+                showNotification(type === "superFertilizer" ? "✨ Instant grow!" : "💩 Fertilized! 2x yield", "success");
+                setSelectedPlot(null);
+            } else {
+                showNotification(result?.error || "Failed", "error");
+            }
+        } catch (e) {
+            console.error("Fertilizer error:", e);
+        }
+    };
+
+    const handleUseWaterCan = async (plotIndex) => {
+        try {
+            const result = await useWaterCan({ userId, plotIndex });
+            if (result?.success) {
+                showNotification(`💧 Speeding up! (-${Math.round(result.timeReduced / 1000)}s)`, "success");
+                setSelectedPlot(null);
+            } else {
+                showNotification(result?.error || "Failed", "error");
+            }
+        } catch (e) {
+            console.error("Water can error:", e);
         }
     };
 
@@ -234,14 +268,29 @@ export default function BingoFarm({ userId }) {
 
                     {/* Farm plots */}
                     <div className="farm-fs-section">
+                        {/* Inventory display */}
+                        {(farm.inventory?.fertilizer > 0 || farm.inventory?.superFertilizer > 0 || farm.inventory?.waterCan > 0) && (
+                            <div className="farm-inventory">
+                                {farm.inventory?.fertilizer > 0 && <span>💩×{farm.inventory.fertilizer}</span>}
+                                {farm.inventory?.superFertilizer > 0 && <span>✨×{farm.inventory.superFertilizer}</span>}
+                                {farm.inventory?.waterCan > 0 && <span>💧×{farm.inventory.waterCan}</span>}
+                            </div>
+                        )}
                         <div className="farm-grid-large">
                             {farm.plots.slice(0, farm.plotCount).map((plot, index) => {
                                 const crop = plot.cropType ? CROPS[plot.cropType] : null;
+                                const isGrowing = plot.cropType && !plot.isReady;
                                 return (
                                     <div
                                         key={index}
-                                        className={`farm-plot-large ${plot.isReady ? "ready" : ""} ${!plot.cropType ? "empty" : ""}`}
-                                        onClick={() => !plot.cropType && handlePlant(index)}
+                                        className={`farm-plot-large ${plot.isReady ? "ready" : ""} ${!plot.cropType ? "empty" : ""} ${selectedPlot === index ? "selected" : ""}`}
+                                        onClick={() => {
+                                            if (!plot.cropType) {
+                                                handlePlant(index);
+                                            } else if (isGrowing) {
+                                                setSelectedPlot(selectedPlot === index ? null : index);
+                                            }
+                                        }}
                                     >
                                         {plot.cropType ? (
                                             <>
@@ -254,9 +303,25 @@ export default function BingoFarm({ userId }) {
                                                     </div>
                                                 )}
                                                 {plot.isReady && <span className="ready-badge">✓</span>}
+                                                {plot.fertilized && <span className="fertilized-badge">💩</span>}
                                             </>
                                         ) : (
                                             <span className="empty-plot-lg">+</span>
+                                        )}
+                                        {/* Plot action popup */}
+                                        {selectedPlot === index && isGrowing && (
+                                            <div className="plot-actions" onClick={e => e.stopPropagation()}>
+                                                {!plot.fertilized && farm.inventory?.fertilizer > 0 && (
+                                                    <button onClick={() => handleUseFertilizer(index, "fertilizer")}>💩 2x</button>
+                                                )}
+                                                {!plot.isReady && farm.inventory?.superFertilizer > 0 && (
+                                                    <button onClick={() => handleUseFertilizer(index, "superFertilizer")}>✨ Now</button>
+                                                )}
+                                                {!plot.isReady && farm.inventory?.waterCan > 0 && (
+                                                    <button onClick={() => handleUseWaterCan(index)}>💧 50%</button>
+                                                )}
+                                                <button onClick={() => setSelectedPlot(null)}>✕</button>
+                                            </div>
                                         )}
                                     </div>
                                 );
