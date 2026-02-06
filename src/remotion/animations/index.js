@@ -9,3 +9,7 @@ export { TournamentVS } from "./TournamentVS";
 export { LuckyLine } from "./LuckyLine";
 export { DailyReward } from "./DailyReward";
 export { NumberCalled } from "./NumberCalled";
+export { XPBarLevel } from "./XPBarLevel";
+export { GemCounter } from "./GemCounter";
+export { Achievement } from "./Achievement";
+export { PurchaseCelebration } from "./PurchaseCelebration";

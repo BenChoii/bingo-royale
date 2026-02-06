@@ -13,4 +13,8 @@ export {
     LuckyLine,
     DailyReward,
     NumberCalled,
+    XPBarLevel,
+    GemCounter,
+    Achievement,
+    PurchaseCelebration,
 } from "./animations";

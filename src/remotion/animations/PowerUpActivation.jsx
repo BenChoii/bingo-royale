@@ -189,6 +189,201 @@ const ShieldBubble = () => {
     );
 };
 
+// Peek eye rays effect
+const PeekEyeRays = () => {
+    const frame = useCurrentFrame();
+    const { fps } = useVideoConfig();
+
+    const rays = Array.from({ length: 8 }, (_, i) => ({
+        angle: (i / 8) * 360,
+        delay: i * 2,
+    }));
+
+    const pulse = spring({
+        frame,
+        fps,
+        config: { damping: 12, stiffness: 100 },
+    });
+
+    return (
+        <>
+            {/* Central eye glow */}
+            <div
+                style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    width: 150 * pulse,
+                    height: 150 * pulse,
+                    borderRadius: "50%",
+                    background: "radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, transparent 70%)",
+                    transform: "translate(-50%, -50%)",
+                }}
+            />
+            {/* Rays */}
+            {rays.map((ray, i) => {
+                const rayFrame = frame - ray.delay;
+                if (rayFrame < 0) return null;
+
+                const length = interpolate(rayFrame, [0, 20], [0, 120], {
+                    extrapolateRight: "clamp",
+                });
+                const opacity = interpolate(rayFrame, [0, 10, 30, 40], [0, 0.8, 0.8, 0], {
+                    extrapolateRight: "clamp",
+                });
+
+                return (
+                    <div
+                        key={i}
+                        style={{
+                            position: "absolute",
+                            left: "50%",
+                            top: "50%",
+                            width: length,
+                            height: 4,
+                            background: "linear-gradient(90deg, #F59E0B, transparent)",
+                            transform: `rotate(${ray.angle}deg) translateX(40px)`,
+                            transformOrigin: "left center",
+                            opacity,
+                        }}
+                    />
+                );
+            })}
+        </>
+    );
+};
+
+// Sabotage warning sparks
+const SabotageWarning = () => {
+    const frame = useCurrentFrame();
+    const { fps, width, height } = useVideoConfig();
+
+    const sparks = Array.from({ length: 15 }, (_, i) => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        delay: i * 2,
+        size: 20 + Math.random() * 20,
+    }));
+
+    // Flash effect
+    const flashOpacity = interpolate(frame, [5, 10, 15], [0, 0.3, 0], {
+        extrapolateRight: "clamp",
+    });
+
+    return (
+        <>
+            {/* Red flash */}
+            <AbsoluteFill
+                style={{
+                    background: "rgba(239, 68, 68, 0.3)",
+                    opacity: flashOpacity,
+                }}
+            />
+            {/* Warning sparks */}
+            {sparks.map((spark, i) => {
+                const sparkFrame = frame - spark.delay;
+                if (sparkFrame < 0) return null;
+
+                const scale = spring({
+                    frame: sparkFrame,
+                    fps,
+                    config: { damping: 10, stiffness: 200 },
+                });
+
+                const opacity = interpolate(sparkFrame, [0, 8, 25, 35], [0, 1, 1, 0], {
+                    extrapolateRight: "clamp",
+                });
+
+                return (
+                    <div
+                        key={i}
+                        style={{
+                            position: "absolute",
+                            left: spark.x,
+                            top: spark.y,
+                            fontSize: spark.size,
+                            transform: `scale(${scale})`,
+                            opacity,
+                        }}
+                    >
+                        ⚠️
+                    </div>
+                );
+            })}
+        </>
+    );
+};
+
+// Swap card exchange effect
+const SwapCards = () => {
+    const frame = useCurrentFrame();
+    const { fps } = useVideoConfig();
+
+    const swap = spring({
+        frame,
+        fps,
+        config: { damping: 12, stiffness: 100 },
+    });
+
+    const leftX = interpolate(swap, [0, 1], [-80, 80]);
+    const rightX = interpolate(swap, [0, 1], [80, -80]);
+    const rotation = interpolate(swap, [0, 1], [0, 360]);
+
+    const opacity = interpolate(frame, [0, 10, 35, 45], [0, 1, 1, 0], {
+        extrapolateRight: "clamp",
+    });
+
+    return (
+        <>
+            {/* Left card */}
+            <div
+                style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: "45%",
+                    width: 60,
+                    height: 80,
+                    background: "linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)",
+                    borderRadius: 8,
+                    border: "3px solid white",
+                    transform: `translate(${leftX}px, -50%) rotate(${rotation}deg)`,
+                    opacity,
+                    boxShadow: "0 4px 20px rgba(59, 130, 246, 0.5)",
+                }}
+            />
+            {/* Right card */}
+            <div
+                style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: "45%",
+                    width: 60,
+                    height: 80,
+                    background: "linear-gradient(135deg, #EF4444 0%, #991B1B 100%)",
+                    borderRadius: 8,
+                    border: "3px solid white",
+                    transform: `translate(${rightX}px, -50%) rotate(${-rotation}deg)`,
+                    opacity,
+                    boxShadow: "0 4px 20px rgba(239, 68, 68, 0.5)",
+                }}
+            />
+            {/* Swap arrows */}
+            <div
+                style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: "45%",
+                    transform: "translate(-50%, -50%)",
+                    fontSize: 40,
+                    opacity: opacity * 0.8,
+                }}
+            >
+                🔄
+            </div>
+        </>
+    );
+};
+
 // Power-up icon pop
 const PowerUpIcon = ({ emoji, color }) => {
     const frame = useCurrentFrame();
@@ -282,6 +477,24 @@ export const PowerUpActivation = ({ type = "quickdaub" }) => {
             name: "SHIELD",
             color: "#8B5CF6",
             Effect: ShieldBubble,
+        },
+        peek: {
+            emoji: "👁️",
+            name: "PEEK",
+            color: "#F59E0B",
+            Effect: PeekEyeRays,
+        },
+        sabotage: {
+            emoji: "⚠️",
+            name: "SABOTAGE",
+            color: "#EF4444",
+            Effect: SabotageWarning,
+        },
+        swap: {
+            emoji: "🔄",
+            name: "SWAP CARDS",
+            color: "#10B981",
+            Effect: SwapCards,
         },
     };
 

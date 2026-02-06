@@ -256,8 +256,17 @@ export default function GameScreen({ userId, roomId, onLeave }) {
             });
             if (result.success) {
                 setTargeting(null);
-                // Trigger power-up animation!
-                const animType = ["quickdaub", "wild", "freeze", "shield"].includes(type) ? type : "quickdaub";
+                // Trigger power-up animation! Map all power-up types to animation types
+                const powerUpAnimMap = {
+                    quickdaub: "quickdaub",
+                    wild: "wild",
+                    freeze: "freeze",
+                    shield: "shield",
+                    peek: "peek",
+                    sabotage: "sabotage",
+                    swap: "swap",
+                };
+                const animType = powerUpAnimMap[type] || "quickdaub";
                 setActiveAnimation({ type: "powerUp", data: { type: animType } });
                 if (type === "peek" && result.peekedNumber) {
                     setPeekedNumber(result.peekedNumber);

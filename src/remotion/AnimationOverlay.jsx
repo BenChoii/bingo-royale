@@ -12,6 +12,10 @@ import {
     LuckyLine,
     DailyReward,
     NumberCalled,
+    XPBarLevel,
+    GemCounter,
+    Achievement,
+    PurchaseCelebration,
 } from "./animations";
 import "./AnimationOverlay.css";
 
@@ -89,6 +93,26 @@ const ANIMATIONS = {
         component: NumberCalled,
         durationInFrames: 60,
         defaultProps: { number: 42, isOnCard: true },
+    },
+    xpBar: {
+        component: XPBarLevel,
+        durationInFrames: 60,
+        defaultProps: { fromPercent: 60, toPercent: 100, level: 15, xpGained: 150, isLevelUp: true },
+    },
+    gemCounter: {
+        component: GemCounter,
+        durationInFrames: 70,
+        defaultProps: { fromAmount: 1000, toAmount: 1150 },
+    },
+    achievement: {
+        component: Achievement,
+        durationInFrames: 90,
+        defaultProps: { title: "First Steps", description: "Complete your first bingo game", icon: "🎯", reward: "+50 💎" },
+    },
+    purchase: {
+        component: PurchaseCelebration,
+        durationInFrames: 90,
+        defaultProps: { itemIcon: "👑", itemName: "Golden Crown" },
     },
 };
 
