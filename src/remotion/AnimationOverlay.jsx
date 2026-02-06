@@ -1,6 +1,14 @@
 import { Player } from "@remotion/player";
 import { useState, useEffect } from "react";
-import { BingoWin, HarvestCelebration, PowerUpActivation } from "./animations";
+import {
+    BingoWin,
+    HarvestCelebration,
+    PowerUpActivation,
+    BossIntro,
+    BossVictory,
+    EggHatch,
+    FarmLevelUp,
+} from "./animations";
 import "./AnimationOverlay.css";
 
 // Animation configurations
@@ -19,6 +27,33 @@ const ANIMATIONS = {
         component: PowerUpActivation,
         durationInFrames: 50,
         defaultProps: { type: "quickdaub" },
+    },
+    bossIntro: {
+        component: BossIntro,
+        durationInFrames: 90,
+        defaultProps: { bossName: "Dragon King", bossEmoji: "🐉", hp: 5000 },
+    },
+    bossVictory: {
+        component: BossVictory,
+        durationInFrames: 100,
+        defaultProps: { bossEmoji: "🐉", totalDamage: 5000 },
+    },
+    eggHatch: {
+        component: EggHatch,
+        durationInFrames: 80,
+        defaultProps: { animalEmoji: "🐥", animalName: "Baby Chick" },
+    },
+    levelUp: {
+        component: FarmLevelUp,
+        durationInFrames: 75,
+        defaultProps: {
+            level: 5,
+            unlocks: [
+                { emoji: "🌽", name: "Corn" },
+                { emoji: "🐷", name: "Pig" },
+                { emoji: "🏠", name: "Plot" },
+            ]
+        },
     },
 };
 

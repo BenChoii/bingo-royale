@@ -116,16 +116,24 @@ export default function BingoFarm({ userId }) {
                 const cropEmoji = farm?.plots?.find(p => p.isReady)?.cropType || "sprout";
                 const emojiIcon = CROPS[cropEmoji]?.emoji || "🌱";
 
-                // Trigger harvest animation!
-                setActiveAnimation({
-                    type: "harvest",
-                    data: {
-                        cropEmoji: emojiIcon,
-                        gemsEarned: result.gemsEarned,
-                        xpGained: result.xpEarned || result.gemsEarned,
-                        harvestCount: result.harvested,
-                    },
-                });
+                // Check if leveled up - trigger level up animation instead
+                if (result.leveledUp) {
+                    setActiveAnimation({
+                        type: "levelUp",
+                        data: { level: result.newLevel },
+                    });
+                } else {
+                    // Trigger harvest animation!
+                    setActiveAnimation({
+                        type: "harvest",
+                        data: {
+                            cropEmoji: emojiIcon,
+                            gemsEarned: result.gemsEarned,
+                            xpGained: result.xpEarned || result.gemsEarned,
+                            harvestCount: result.harvested,
+                        },
+                    });
+                }
 
                 let msg = `🌾 +${result.gemsEarned}💎 from ${result.harvested} crops!`;
                 if (result.autoPlanted > 0) msg += ` 🤖 Auto-planted ${result.autoPlanted}`;
@@ -205,7 +213,17 @@ export default function BingoFarm({ userId }) {
 
     const handleHatchEggs = async () => {
         const result = await hatchEggs({ userId });
-        if (result?.success) showNotification("Hatched! 🐣", "success");
+        if (result?.success) {
+            // Trigger egg hatch animation!
+            setActiveAnimation({
+                type: "eggHatch",
+                data: {
+                    animalEmoji: result.animalEmoji || "🐥",
+                    animalName: result.animalName || "Baby Animal"
+                },
+            });
+            showNotification("Hatched! 🐣", "success");
+        }
     };
 
     const handleSellGoods = async (goodType) => {

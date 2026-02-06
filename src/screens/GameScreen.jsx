@@ -169,6 +169,14 @@ export default function GameScreen({ userId, roomId, onLeave }) {
                 } else {
                     showNotification(`💥 BINGO! ${result.damage} MASSIVE DAMAGE to the boss!`, "success");
                     if (result.victory) {
+                        // Trigger boss victory animation!
+                        setActiveAnimation({
+                            type: "bossVictory",
+                            data: {
+                                bossEmoji: activeBoss?.emoji || "👹",
+                                totalDamage: activeBoss?.maxHp || 5000
+                            },
+                        });
                         showNotification("🏆 VICTORY! Boss defeated!", "success");
                     }
                 }
@@ -328,7 +336,18 @@ export default function GameScreen({ userId, roomId, onLeave }) {
 
     const handleStartBossAction = async () => {
         const result = await startBossBattle({ roomId });
-        if (!result.success) {
+        if (result.success) {
+            // Trigger boss intro animation!
+            const boss = activeBoss || {};
+            setActiveAnimation({
+                type: "bossIntro",
+                data: {
+                    bossName: boss.name || "Boss",
+                    bossEmoji: boss.emoji || "👹",
+                    hp: boss.maxHp || 5000
+                },
+            });
+        } else if (!result.success) {
             showNotification(result.error, "error");
         }
     };
@@ -339,6 +358,11 @@ export default function GameScreen({ userId, roomId, onLeave }) {
         if (!result.success) {
             showNotification(result.error, "error");
         } else if (result.consensus) {
+            // Trigger boss intro when consensus reached
+            setActiveAnimation({
+                type: "bossIntro",
+                data: { bossName: "Boss", bossEmoji: "👹", hp: 5000 },
+            });
             showNotification(`Battle starting! 💥`, "success");
         }
     };
