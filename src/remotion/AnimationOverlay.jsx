@@ -8,6 +8,10 @@ import {
     BossVictory,
     EggHatch,
     FarmLevelUp,
+    TournamentVS,
+    LuckyLine,
+    DailyReward,
+    NumberCalled,
 } from "./animations";
 import "./AnimationOverlay.css";
 
@@ -54,6 +58,37 @@ const ANIMATIONS = {
                 { emoji: "🏠", name: "Plot" },
             ]
         },
+    },
+    tournamentVS: {
+        component: TournamentVS,
+        durationInFrames: 120,
+        defaultProps: {
+            player1: { name: "Player 1", avatar: "🎮", gems: 1000 },
+            player2: { name: "Player 2", avatar: "🎯", gems: 1200 },
+            prizePool: 500,
+        },
+    },
+    luckyLine: {
+        component: LuckyLine,
+        durationInFrames: 90,
+        defaultProps: { result: ["💎", "💎", "💎"], winAmount: 100, isJackpot: false },
+    },
+    dailyReward: {
+        component: DailyReward,
+        durationInFrames: 90,
+        defaultProps: {
+            rewards: [
+                { emoji: "💎", label: "Gems", value: 50 },
+                { emoji: "⭐", label: "XP", value: 100 },
+                { emoji: "🎫", label: "Tickets", value: 1 },
+            ],
+            streak: 5,
+        },
+    },
+    numberCalled: {
+        component: NumberCalled,
+        durationInFrames: 60,
+        defaultProps: { number: 42, isOnCard: true },
     },
 };
 

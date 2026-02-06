@@ -9,4 +9,8 @@ export {
     BossVictory,
     EggHatch,
     FarmLevelUp,
+    TournamentVS,
+    LuckyLine,
+    DailyReward,
+    NumberCalled,
 } from "./animations";

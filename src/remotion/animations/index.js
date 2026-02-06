@@ -5,3 +5,7 @@ export { BossIntro } from "./BossIntro";
 export { BossVictory } from "./BossVictory";
 export { EggHatch } from "./EggHatch";
 export { FarmLevelUp } from "./FarmLevelUp";
+export { TournamentVS } from "./TournamentVS";
+export { LuckyLine } from "./LuckyLine";
+export { DailyReward } from "./DailyReward";
+export { NumberCalled } from "./NumberCalled";
