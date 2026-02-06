@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useNotification } from "../components/Notifications";
+import { AnimationOverlay } from "../remotion";
 import "./GameScreen.css";
 
 const PVP_POWERUPS = [
@@ -105,6 +106,7 @@ export default function GameScreen({ userId, roomId, onLeave }) {
     // Track displayed damage events to prevent re-animating
     const [displayedDamageIds, setDisplayedDamageIds] = useState(new Set());
     const [floatingDamage, setFloatingDamage] = useState([]); // [{id, userName, avatar, damage, x, y}]
+    const [activeAnimation, setActiveAnimation] = useState(null); // { type, data }
 
     const handleTopUp = async () => {
         const result = await claimDailyReward({ userId });
@@ -183,6 +185,11 @@ export default function GameScreen({ userId, roomId, onLeave }) {
         if (!result.success) {
             showNotification(result.error || "Not a valid bingo!", "error");
         } else {
+            // Trigger bingo win animation!
+            setActiveAnimation({
+                type: "bingoWin",
+                data: { gemsWon: result.coinsEarned, pattern: gameState.mode || "line" },
+            });
             showNotification(`BINGO! You earned ${result.xpEarned} XP and ${result.coinsEarned} Gems!`, "success");
             if (result.levelUp) {
                 showNotification("LEVEL UP!", "success");
@@ -241,6 +248,9 @@ export default function GameScreen({ userId, roomId, onLeave }) {
             });
             if (result.success) {
                 setTargeting(null);
+                // Trigger power-up animation!
+                const animType = ["quickdaub", "wild", "freeze", "shield"].includes(type) ? type : "quickdaub";
+                setActiveAnimation({ type: "powerUp", data: { type: animType } });
                 if (type === "peek" && result.peekedNumber) {
                     setPeekedNumber(result.peekedNumber);
                     showNotification(`The next ball is ${result.peekedNumber}!`, "info");
@@ -424,6 +434,15 @@ export default function GameScreen({ userId, roomId, onLeave }) {
 
     return (
         <div className="game-screen">
+            {/* Animation Overlay */}
+            {activeAnimation && (
+                <AnimationOverlay
+                    animation={activeAnimation.type}
+                    data={activeAnimation.data}
+                    onComplete={() => setActiveAnimation(null)}
+                />
+            )}
+
             {/* Header */}
             <header className="game-header">
                 <button className="btn-back" onClick={handleLeave}>← Leave</button>

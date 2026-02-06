@@ -1,0 +1,14 @@
+.animation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9000;
+    pointer-events: none;
+    transition: opacity 0.2s ease-out;
+}
+
+.animation-overlay.ending {
+    opacity: 0;
+}

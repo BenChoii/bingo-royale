@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useNotification } from "./Notifications";
+import { AnimationOverlay } from "../remotion";
 import "./BingoFarm.css";
 
 // Crop definitions with balanced economy
@@ -64,6 +65,7 @@ export default function BingoFarm({ userId }) {
     const [selectedItem, setSelectedItem] = useState(null);
     const [selectedPlot, setSelectedPlot] = useState(null);
     const [now, setNow] = useState(Date.now());
+    const [activeAnimation, setActiveAnimation] = useState(null);
     const { showNotification } = useNotification();
 
     const farm = useQuery(api.farm.getFarm, { userId });
@@ -110,6 +112,21 @@ export default function BingoFarm({ userId }) {
         try {
             const result = await harvestCrops({ userId });
             if (result?.success) {
+                // Get the most common crop emoji for animation
+                const cropEmoji = farm?.plots?.find(p => p.isReady)?.cropType || "sprout";
+                const emojiIcon = CROPS[cropEmoji]?.emoji || "🌱";
+
+                // Trigger harvest animation!
+                setActiveAnimation({
+                    type: "harvest",
+                    data: {
+                        cropEmoji: emojiIcon,
+                        gemsEarned: result.gemsEarned,
+                        xpGained: result.xpEarned || result.gemsEarned,
+                        harvestCount: result.harvested,
+                    },
+                });
+
                 let msg = `🌾 +${result.gemsEarned}💎 from ${result.harvested} crops!`;
                 if (result.autoPlanted > 0) msg += ` 🤖 Auto-planted ${result.autoPlanted}`;
                 if (result.leveledUp) msg += ` 🎉 Level ${result.newLevel}!`;
@@ -240,6 +257,14 @@ export default function BingoFarm({ userId }) {
     if (isFullScreen) {
         return (
             <div className="farm-fullscreen">
+                {/* Animation Overlay */}
+                {activeAnimation && (
+                    <AnimationOverlay
+                        animation={activeAnimation.type}
+                        data={activeAnimation.data}
+                        onComplete={() => setActiveAnimation(null)}
+                    />
+                )}
                 <div className="farm-fs-header">
                     <div className="farm-fs-title">
                         🌾 <span>Farm</span>
